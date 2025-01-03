@@ -69,3 +69,6 @@ ENV/
 env.bak/
 venv.bak/
 /docs/_build/doctrees/
+
+# test files
+example/test.py
