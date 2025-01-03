@@ -1289,20 +1289,6 @@ class Tab(Connection):
                         res.append(abs_url)
         return res
 
-    async def verify_cf(self):
-        """an attempt.."""
-        checkbox = None
-        checkbox_sibling = await self.wait_for(text="verify you are human")
-        if checkbox_sibling:
-            parent = checkbox_sibling.parent
-            while parent:
-                checkbox = await parent.query_selector("input[type=checkbox]")
-                if checkbox:
-                    break
-                parent = parent.parent
-        await checkbox.mouse_move()
-        await checkbox.mouse_click()
-
     async def get_local_storage(self):
         """
         get local storage items as dict of strings (careful!, proper deserialization needs to be done if needed)

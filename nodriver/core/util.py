@@ -138,23 +138,25 @@ def free_port() -> int:
 
 
 def deconstruct_browser():
+    import time
     for _ in __registered__instances__:
         if not _.stopped:
             _.stop()
-        for attempt in range(3):
+        for attempt in range(5):
             try:
                 if _.config and not _.config.uses_custom_data_dir:
                     shutil.rmtree(_.config.user_data_dir, ignore_errors=False)
             except FileNotFoundError as e:
                 break
             except (PermissionError, OSError) as e:
-                if attempt == 2:
+                if attempt == 4:
                     logger.debug(
                         "problem removing data dir %s\nConsider checking whether it's there and remove it by hand\nerror: %s",
                         _.config.user_data_dir,
                         e,
                     )
                     break
+                time.sleep(0.15)
                 continue
 
 
