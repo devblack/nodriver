@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import atexit
 import json
 import logging
 import os
@@ -604,7 +605,6 @@ class Browser:
             self._process = None
             self._process_pid = None
 
-        util.deconstruct_browser()
 
     def __await__(self):
         # return ( asyncio.sleep(0)).__await__()
@@ -828,3 +828,4 @@ class HTTPApi:
         )
         return json.loads(response.read())
 
+atexit.register(util.deconstruct_browser)
