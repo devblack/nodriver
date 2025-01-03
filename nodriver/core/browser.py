@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import atexit
 import json
 import logging
 import os
@@ -316,7 +315,7 @@ class Browser:
         exe = self.config.browser_executable_path
         params = self.config()
 
-        logger.info(
+        logger.debug(
             "starting\n\texecutable :%s\n\narguments:\n%s", exe, "\n\t".join(params)
         )
         if not connect_existing:
@@ -363,7 +362,7 @@ class Browser:
         self.connection = Connection(self.info.webSocketDebuggerUrl, _owner=self)
 
         if self.config.autodiscover_targets:
-            logger.info("enabling autodiscover targets")
+            logger.debug("enabling autodiscover targets")
 
             # self.connection.add_handler(
             #     cdp.target.TargetInfoChanged, self._handle_target_update
@@ -605,6 +604,8 @@ class Browser:
             self._process = None
             self._process_pid = None
 
+        util.deconstruct_browser()
+
     def __await__(self):
         # return ( asyncio.sleep(0)).__await__()
         return self.update_targets().__await__()
@@ -827,5 +828,3 @@ class HTTPApi:
         )
         return json.loads(response.read())
 
-
-atexit.register(util.deconstruct_browser)
