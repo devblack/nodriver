@@ -400,7 +400,7 @@ class Connection(metaclass=CantTouchThis):
         :return:
         """
         await self.aopen()
-        if not self.websocket or self.closed:
+        if not self.websocket or self.websocket.state is websockets.protocol.State.CLOSED:
             return
         if self._owner:
             browser = self._owner
