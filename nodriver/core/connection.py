@@ -11,7 +11,6 @@ import sys
 import types
 from asyncio import iscoroutine, iscoroutinefunction
 from typing import Any, Awaitable, Callable, Generator, TypeVar, Union
-
 import websockets
 
 from .. import cdp
@@ -272,8 +271,7 @@ class Connection(metaclass=CantTouchThis):
         :param kw:
         :return:
         """
-
-        if not self.websocket or self.websocket.closed:
+        if not self.websocket or self.websocket.state is websockets.protocol.State.CLOSED:
             try:
                 self.websocket = await websockets.connect(
                     self.websocket_url,
@@ -299,7 +297,7 @@ class Connection(metaclass=CantTouchThis):
         """
         closes the websocket connection. should not be called manually by users.
         """
-        if self.websocket and not self.websocket.closed:
+        if self.websocket and self.websocket.state != websockets.protocol.State.CLOSED:
             if self.listener and self.listener.running:
                 self.listener.cancel()
                 self.enabled_domains.clear()
