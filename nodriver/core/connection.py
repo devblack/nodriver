@@ -12,7 +12,7 @@ import types
 from asyncio import iscoroutine, iscoroutinefunction
 from typing import Any, Awaitable, Callable, Generator, TypeVar, Union
 import websockets
-
+from websockets.protocol import State
 from .. import cdp
 from . import util
 
@@ -220,7 +220,7 @@ class Connection(metaclass=CantTouchThis):
     def closed(self):
         if not self.websocket:
             return True
-        return self.websocket.closed
+        return self.websocket.state is State.CLOSED
 
     def add_handler(
         self,
@@ -271,7 +271,7 @@ class Connection(metaclass=CantTouchThis):
         :param kw:
         :return:
         """
-        if not self.websocket or self.websocket.state is websockets.protocol.State.CLOSED:
+        if not self.websocket or self.websocket.state is State.CLOSED:
             try:
                 self.websocket = await websockets.connect(
                     self.websocket_url,
@@ -297,7 +297,7 @@ class Connection(metaclass=CantTouchThis):
         """
         closes the websocket connection. should not be called manually by users.
         """
-        if self.websocket and self.websocket.state != websockets.protocol.State.CLOSED:
+        if self.websocket and self.websocket.state != State.CLOSED:
             if self.listener and self.listener.running:
                 self.listener.cancel()
                 self.enabled_domains.clear()
@@ -400,7 +400,7 @@ class Connection(metaclass=CantTouchThis):
         :return:
         """
         await self.aopen()
-        if not self.websocket or self.websocket.state is websockets.protocol.State.CLOSED:
+        if not self.websocket or self.closed:
             return
         if self._owner:
             browser = self._owner
