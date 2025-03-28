@@ -15,6 +15,7 @@ import websockets
 from websockets.protocol import State
 from .. import cdp
 from . import util
+from . import browser
 
 T = TypeVar("T")
 
@@ -113,6 +114,8 @@ class Transaction(asyncio.Future):
         try:
             # try to parse the result according to the py cdp docs.
             self.__cdp_obj__.send(response["result"])
+        except KeyError as e:
+            raise KeyError(f"key '{e.args}' not found in message: {response['result']}")
         except StopIteration as e:
             # exception value holds the parsed response
             return self.set_result(e.value)
@@ -186,7 +189,7 @@ class Connection(metaclass=CantTouchThis):
         self,
         websocket_url: str,
         target: cdp.target.TargetInfo = None,
-        _owner: "Browser" = None,
+        _owner: browser.Browser = None,
         **kwargs,
     ):
         super().__init__()
@@ -487,15 +490,16 @@ class Connection(metaclass=CantTouchThis):
 
         if getattr(self, "_prep_headless_done", None):
             return
-        response, error = await self._send_oneshot(
+        response = await self._send_oneshot(
             cdp.runtime.evaluate(
-                expression="navigator.userAgent",
-                user_gesture=True,
-                await_promise=True,
-                return_by_value=True,
-                allow_unsafe_eval_blocked_by_csp=True,
+                expression="navigator.userAgent"
             )
         )
+        if not response:
+            return
+        
+        response, error = response
+
         if response and response.value:
             ua = response.value
             await self._send_oneshot(
@@ -641,8 +645,6 @@ class Listener:
                 try:
                     event = cdp.util.parse_json_event(message)
                     event_tx = EventTransaction(event)
-                    if not self.connection.mapper:
-                        self.connection.__count__ = itertools.count(0)
                     event_tx.id = next(self.connection.__count__)
                     self.connection.mapper[event_tx.id] = event_tx
                 except Exception as e:
