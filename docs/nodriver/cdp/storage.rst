@@ -57,7 +57,12 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
-.. autoclass:: SharedStorageAccessType
+.. autoclass:: SharedStorageAccessScope
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: SharedStorageAccessMethod
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json
@@ -68,6 +73,11 @@ arguments to other commands.
       :exclude-members: from_json, to_json
 
 .. autoclass:: SharedStorageMetadata
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: SharedStoragePrivateAggregationConfig
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json
@@ -172,6 +182,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: AttributionReportingNamedBudgetDef
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: AttributionReportingSourceRegistration
       :members:
       :undoc-members:
@@ -212,6 +227,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: AttributionReportingNamedBudgetCandidate
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: AttributionReportingTriggerRegistration
       :members:
       :undoc-members:
@@ -223,6 +243,11 @@ arguments to other commands.
       :exclude-members: from_json, to_json
 
 .. autoclass:: AttributionReportingAggregatableResult
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: AttributionReportingReportResult
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json
@@ -258,6 +283,8 @@ to. For more information, see
 
 .. autofunction:: delete_storage_bucket
 
+.. autofunction:: get_affected_urls_for_third_party_cookie_metadata
+
 .. autofunction:: get_cookies
 
 .. autofunction:: get_interest_group_details
@@ -291,6 +318,8 @@ to. For more information, see
 .. autofunction:: set_interest_group_auction_tracking
 
 .. autofunction:: set_interest_group_tracking
+
+.. autofunction:: set_protected_audience_k_anonymity
 
 .. autofunction:: set_shared_storage_entry
 
@@ -377,6 +406,11 @@ you use the event's attributes.
       :exclude-members: from_json, to_json
 
 .. autoclass:: AttributionReportingTriggerRegistered
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: AttributionReportingReportSent
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json

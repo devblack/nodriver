@@ -82,10 +82,10 @@ class PseudoType(enum.Enum):
     '''
     FIRST_LINE = "first-line"
     FIRST_LETTER = "first-letter"
-    CHECK = "check"
+    CHECKMARK = "checkmark"
     BEFORE = "before"
     AFTER = "after"
-    SELECT_ARROW = "select-arrow"
+    PICKER_ICON = "picker-icon"
     MARKER = "marker"
     BACKDROP = "backdrop"
     COLUMN = "column"
@@ -98,8 +98,7 @@ class PseudoType(enum.Enum):
     FIRST_LINE_INHERITED = "first-line-inherited"
     SCROLL_MARKER = "scroll-marker"
     SCROLL_MARKER_GROUP = "scroll-marker-group"
-    SCROLL_NEXT_BUTTON = "scroll-next-button"
-    SCROLL_PREV_BUTTON = "scroll-prev-button"
+    SCROLL_BUTTON = "scroll-button"
     SCROLLBAR = "scrollbar"
     SCROLLBAR_THUMB = "scrollbar-thumb"
     SCROLLBAR_BUTTON = "scrollbar-button"
@@ -2025,11 +2024,11 @@ class TopLayerElementsUpdated:
 @event_class('DOM.scrollableFlagUpdated')
 @dataclass
 class ScrollableFlagUpdated:
-    """
+    '''
     **EXPERIMENTAL**
 
     Fired when a node's scrollability state changes.
-    """
+    '''
     #: The id of the node.
     node_id: NodeId
     #: If the node is scrollable.

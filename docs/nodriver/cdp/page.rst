@@ -107,6 +107,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: SecurityOriginDetails
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: Frame
       :members:
       :undoc-members:
@@ -358,7 +363,7 @@ to. For more information, see
 
 .. autofunction:: generate_test_report
 
-.. autofunction:: get_ad_script_id
+.. autofunction:: get_ad_script_ancestry_ids
 
 .. autofunction:: get_app_id
 
@@ -492,6 +497,11 @@ you use the event's attributes.
       :exclude-members: from_json, to_json
 
 .. autoclass:: FrameResized
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: FrameStartedNavigating
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json
