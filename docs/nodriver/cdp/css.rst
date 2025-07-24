@@ -276,6 +276,8 @@ to. For more information, see
 
 .. autofunction:: get_computed_style_for_node
 
+.. autofunction:: get_environment_variables
+
 .. autofunction:: get_inline_styles_for_node
 
 .. autofunction:: get_layers_for_node

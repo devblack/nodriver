@@ -157,11 +157,6 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
-.. autoclass:: AttributionReportingTriggerSpec
-      :members:
-      :undoc-members:
-      :exclude-members: from_json, to_json
-
 .. autoclass:: AttributionReportingTriggerDataMatching
       :members:
       :undoc-members:
@@ -390,6 +385,11 @@ you use the event's attributes.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: SharedStorageWorkletOperationExecutionFinished
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: StorageBucketCreatedOrUpdated
       :members:
       :undoc-members:
@@ -411,6 +411,11 @@ you use the event's attributes.
       :exclude-members: from_json, to_json
 
 .. autoclass:: AttributionReportingReportSent
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: AttributionReportingVerboseDebugReportSent
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json

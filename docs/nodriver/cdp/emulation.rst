@@ -141,6 +141,8 @@ to. For more information, see
 
 .. autofunction:: set_cpu_throttling_rate
 
+.. autofunction:: set_data_saver_override
+
 .. autofunction:: set_default_background_color_override
 
 .. autofunction:: set_device_metrics_override
@@ -157,6 +159,8 @@ to. For more information, see
 
 .. autofunction:: set_emulated_media
 
+.. autofunction:: set_emulated_os_text_scale
+
 .. autofunction:: set_emulated_vision_deficiency
 
 .. autofunction:: set_focus_emulation_enabled
@@ -172,6 +176,8 @@ to. For more information, see
 .. autofunction:: set_navigator_overrides
 
 .. autofunction:: set_page_scale_factor
+
+.. autofunction:: set_pressure_data_override
 
 .. autofunction:: set_pressure_source_override_enabled
 

@@ -107,6 +107,7 @@ class RuleSet:
 class RuleSetErrorType(enum.Enum):
     SOURCE_IS_NOT_JSON_OBJECT = "SourceIsNotJsonObject"
     INVALID_RULES_SKIPPED = "InvalidRulesSkipped"
+    INVALID_RULESET_LEVEL_TAG = "InvalidRulesetLevelTag"
 
     def to_json(self) -> str:
         return self.value
@@ -248,7 +249,6 @@ class PrerenderFinalStatus(enum.Enum):
     INVALID_SCHEME_REDIRECT = "InvalidSchemeRedirect"
     INVALID_SCHEME_NAVIGATION = "InvalidSchemeNavigation"
     NAVIGATION_REQUEST_BLOCKED_BY_CSP = "NavigationRequestBlockedByCsp"
-    MAIN_FRAME_NAVIGATION = "MainFrameNavigation"
     MOJO_BINDER_POLICY = "MojoBinderPolicy"
     RENDERER_PROCESS_CRASHED = "RendererProcessCrashed"
     RENDERER_PROCESS_KILLED = "RendererProcessKilled"

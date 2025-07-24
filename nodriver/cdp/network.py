@@ -41,6 +41,7 @@ class ResourceType(enum.Enum):
     PING = "Ping"
     CSP_VIOLATION_REPORT = "CSPViolationReport"
     PREFLIGHT = "Preflight"
+    FED_CM = "FedCM"
     OTHER = "Other"
 
     def to_json(self) -> str:
@@ -984,6 +985,10 @@ class Response:
     #: Security details for the request.
     security_details: typing.Optional[SecurityDetails] = None
 
+    #: Indicates whether the request was sent through IP Protection proxies. If
+    #: set to true, the request used the IP Protection privacy feature.
+    is_ip_protection_used: typing.Optional[bool] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['url'] = self.url
@@ -1030,6 +1035,8 @@ class Response:
             json['alternateProtocolUsage'] = self.alternate_protocol_usage.to_json()
         if self.security_details is not None:
             json['securityDetails'] = self.security_details.to_json()
+        if self.is_ip_protection_used is not None:
+            json['isIpProtectionUsed'] = self.is_ip_protection_used
         return json
 
     @classmethod
@@ -1062,6 +1069,7 @@ class Response:
             protocol=str(json['protocol']) if json.get('protocol', None) is not None else None,
             alternate_protocol_usage=AlternateProtocolUsage.from_json(json['alternateProtocolUsage']) if json.get('alternateProtocolUsage', None) is not None else None,
             security_details=SecurityDetails.from_json(json['securityDetails']) if json.get('securityDetails', None) is not None else None,
+            is_ip_protection_used=bool(json['isIpProtectionUsed']) if json.get('isIpProtectionUsed', None) is not None else None,
         )
 
 
@@ -1957,6 +1965,10 @@ class SignedExchangeInfo:
     #: The outer response of signed HTTP exchange which was received from network.
     outer_response: Response
 
+    #: Whether network response for the signed exchange was accompanied by
+    #: extra headers.
+    has_extra_info: bool
+
     #: Information about the signed exchange header.
     header: typing.Optional[SignedExchangeHeader] = None
 
@@ -1969,6 +1981,7 @@ class SignedExchangeInfo:
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['outerResponse'] = self.outer_response.to_json()
+        json['hasExtraInfo'] = self.has_extra_info
         if self.header is not None:
             json['header'] = self.header.to_json()
         if self.security_details is not None:
@@ -1981,6 +1994,7 @@ class SignedExchangeInfo:
     def from_json(cls, json: T_JSON_DICT) -> SignedExchangeInfo:
         return cls(
             outer_response=Response.from_json(json['outerResponse']),
+            has_extra_info=bool(json['hasExtraInfo']),
             header=SignedExchangeHeader.from_json(json['header']) if json.get('header', None) is not None else None,
             security_details=SecurityDetails.from_json(json['securityDetails']) if json.get('securityDetails', None) is not None else None,
             errors=[SignedExchangeError.from_json(i) for i in json['errors']] if json.get('errors', None) is not None else None,
@@ -2154,8 +2168,8 @@ class PrivateNetworkRequestPolicy(enum.Enum):
 
 
 class IPAddressSpace(enum.Enum):
+    LOOPBACK = "Loopback"
     LOCAL = "Local"
-    PRIVATE = "Private"
     PUBLIC = "Public"
     UNKNOWN = "Unknown"
 

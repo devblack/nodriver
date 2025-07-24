@@ -72,3 +72,5 @@ venv.bak/
 
 # test files
 example/test.py
+example/cloudflare.py
+example/iframe.py

@@ -1993,6 +1993,21 @@ def get_matched_styles_for_node(
     )
 
 
+def get_environment_variables() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,dict]:
+    '''
+    Returns the values of the default UA-defined environment variables used in env()
+
+    **EXPERIMENTAL**
+
+    :returns: 
+    '''
+    cmd_dict: T_JSON_DICT = {
+        'method': 'CSS.getEnvironmentVariables',
+    }
+    json = yield cmd_dict
+    return dict(json['environmentVariables'])
+
+
 def get_media_queries() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.List[CSSMedia]]:
     '''
     Returns all media queries parsed by the rendering engine.

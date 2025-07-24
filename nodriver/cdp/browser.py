@@ -633,6 +633,33 @@ def set_window_bounds(
     json = yield cmd_dict
 
 
+def set_contents_size(
+        window_id: WindowID,
+        width: typing.Optional[int] = None,
+        height: typing.Optional[int] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Set size of the browser contents resizing browser window as necessary.
+
+    **EXPERIMENTAL**
+
+    :param window_id: Browser window id.
+    :param width: *(Optional)* The window contents width in DIP. Assumes current width if omitted. Must be specified if 'height' is omitted.
+    :param height: *(Optional)* The window contents height in DIP. Assumes current height if omitted. Must be specified if 'width' is omitted.
+    '''
+    params: T_JSON_DICT = dict()
+    params['windowId'] = window_id.to_json()
+    if width is not None:
+        params['width'] = width
+    if height is not None:
+        params['height'] = height
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Browser.setContentsSize',
+        'params': params,
+    }
+    json = yield cmd_dict
+
+
 def set_dock_tile(
         badge_label: typing.Optional[str] = None,
         image: typing.Optional[str] = None
@@ -767,6 +794,10 @@ class DownloadProgress:
     received_bytes: float
     #: Download status.
     state: str
+    #: If download is "completed", provides the path of the downloaded file.
+    #: Depending on the platform, it is not guaranteed to be set, nor the file
+    #: is guaranteed to exist.
+    file_path: typing.Optional[str]
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> DownloadProgress:
@@ -774,5 +805,6 @@ class DownloadProgress:
             guid=str(json['guid']),
             total_bytes=float(json['totalBytes']),
             received_bytes=float(json['receivedBytes']),
-            state=str(json['state'])
+            state=str(json['state']),
+            file_path=str(json['filePath']) if json.get('filePath', None) is not None else None
         )

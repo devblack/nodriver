@@ -239,6 +239,10 @@ class UserAgentMetadata:
 
     wow64: typing.Optional[bool] = None
 
+    #: Used to specify User Agent form-factor values.
+    #: See https://wicg.github.io/ua-client-hints/#sec-ch-ua-form-factors
+    form_factors: typing.Optional[typing.List[str]] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['platform'] = self.platform
@@ -256,6 +260,8 @@ class UserAgentMetadata:
             json['bitness'] = self.bitness
         if self.wow64 is not None:
             json['wow64'] = self.wow64
+        if self.form_factors is not None:
+            json['formFactors'] = [i for i in self.form_factors]
         return json
 
     @classmethod
@@ -271,6 +277,7 @@ class UserAgentMetadata:
             full_version=str(json['fullVersion']) if json.get('fullVersion', None) is not None else None,
             bitness=str(json['bitness']) if json.get('bitness', None) is not None else None,
             wow64=bool(json['wow64']) if json.get('wow64', None) is not None else None,
+            form_factors=[str(i) for i in json['formFactors']] if json.get('formFactors', None) is not None else None,
         )
 
 
@@ -856,6 +863,24 @@ def set_emulated_vision_deficiency(
     json = yield cmd_dict
 
 
+def set_emulated_os_text_scale(
+        scale: typing.Optional[float] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Emulates the given OS text scale.
+
+    :param scale: *(Optional)*
+    '''
+    params: T_JSON_DICT = dict()
+    if scale is not None:
+        params['scale'] = scale
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Emulation.setEmulatedOSTextScale',
+        'params': params,
+    }
+    json = yield cmd_dict
+
+
 def set_geolocation_override(
         latitude: typing.Optional[float] = None,
         longitude: typing.Optional[float] = None,
@@ -1007,6 +1032,7 @@ def set_pressure_state_override(
         state: PressureState
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
     '''
+    TODO: OBSOLETE: To remove when setPressureDataOverride is merged.
     Provides a given pressure state that will be processed and eventually be
     delivered to PressureObserver users. ``source`` must have been previously
     overridden by setPressureSourceOverrideEnabled.
@@ -1021,6 +1047,34 @@ def set_pressure_state_override(
     params['state'] = state.to_json()
     cmd_dict: T_JSON_DICT = {
         'method': 'Emulation.setPressureStateOverride',
+        'params': params,
+    }
+    json = yield cmd_dict
+
+
+def set_pressure_data_override(
+        source: PressureSource,
+        state: PressureState,
+        own_contribution_estimate: typing.Optional[float] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Provides a given pressure data set that will be processed and eventually be
+    delivered to PressureObserver users. ``source`` must have been previously
+    overridden by setPressureSourceOverrideEnabled.
+
+    **EXPERIMENTAL**
+
+    :param source:
+    :param state:
+    :param own_contribution_estimate: *(Optional)*
+    '''
+    params: T_JSON_DICT = dict()
+    params['source'] = source.to_json()
+    params['state'] = state.to_json()
+    if own_contribution_estimate is not None:
+        params['ownContributionEstimate'] = own_contribution_estimate
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Emulation.setPressureDataOverride',
         'params': params,
     }
     json = yield cmd_dict
@@ -1247,6 +1301,26 @@ def set_disabled_image_types(
     params['imageTypes'] = [i.to_json() for i in image_types]
     cmd_dict: T_JSON_DICT = {
         'method': 'Emulation.setDisabledImageTypes',
+        'params': params,
+    }
+    json = yield cmd_dict
+
+
+def set_data_saver_override(
+        data_saver_enabled: typing.Optional[bool] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Override the value of navigator.connection.saveData
+
+    **EXPERIMENTAL**
+
+    :param data_saver_enabled: *(Optional)* Override value. Omitting the parameter disables the override.
+    '''
+    params: T_JSON_DICT = dict()
+    if data_saver_enabled is not None:
+        params['dataSaverEnabled'] = data_saver_enabled
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Emulation.setDataSaverOverride',
         'params': params,
     }
     json = yield cmd_dict
