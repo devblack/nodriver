@@ -1,7 +1,7 @@
 [project]
 
 name = "nodriver" # Required
-version = "0.38.post1"  # Required
+version = "0.38.post2"  # Required
 
 description = """
 
