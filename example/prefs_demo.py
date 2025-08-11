@@ -15,9 +15,6 @@ except (ModuleNotFoundError, ImportError):
 
 from time import monotonic  # noqa: E402
 
-class FailToBypass(Exception):
-    pass
-
 class Timing:
 
     def __init__(self):
