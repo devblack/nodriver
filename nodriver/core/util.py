@@ -96,7 +96,7 @@ async def start(
 
 
 async def create_from_undetected_chromedriver(
-    driver: "undetected_chromedriver.Chrome",
+    driver: "undetected_chromedriver.Chrome", # type: ignore  # noqa: F821
 ) -> Browser:
     """
     create a nodriver.Browser instance from a running undetected_chromedriver.Chrome instance.
@@ -144,9 +144,14 @@ def deconstruct_browser():
             _.stop()
         for attempt in range(5):
             try:
-                if _.config and not _.config.uses_custom_data_dir:
+                if _.config:
+                    logger.debug(
+                        "removing data dir %s, attempt %d",
+                        _.config.user_data_dir,
+                        attempt + 1,
+                    )
                     shutil.rmtree(_.config.user_data_dir, ignore_errors=False)
-            except FileNotFoundError as e:
+            except FileNotFoundError:
                 break
             except (PermissionError, OSError) as e:
                 if attempt == 4:
@@ -263,7 +268,7 @@ def remove_from_tree(tree: cdp.dom.Node, node: cdp.dom.Node) -> cdp.dom.Node:
     return tree
 
 
-async def html_from_tree(tree: Union[cdp.dom.Node, Element], target: "nodriver.Tab"):
+async def html_from_tree(tree: Union[cdp.dom.Node, Element], target: "nodriver.Tab"):  # type: ignore # noqa: F821
     if not hasattr(tree, "children"):
         raise TypeError("object should have a .children attribute")
     out = ""

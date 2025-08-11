@@ -2,18 +2,15 @@ import re
 import os
 import json
 import typing
-import shutil
 import builtins
 import logging
 import operator
 import itertools
 import urllib.request
-import urllib.parse
 import inflection  # type: ignore
 from enum import Enum
 from pathlib import Path
 from dataclasses import dataclass
-from argparse import ArgumentParser, ArgumentTypeError
 from textwrap import dedent, indent as tw_indent
 
 log_level = getattr(logging, os.environ.get("LOG_LEVEL", "info").upper())
@@ -529,13 +526,13 @@ class CdpParameter(CdpProperty):
         doc = f":param {self.py_name}:"
 
         if self.deprecated:
-            doc += f" **(DEPRECATED)**"
+            doc += " **(DEPRECATED)**"
 
         if self.experimental:
-            doc += f" **(EXPERIMENTAL)**"
+            doc += " **(EXPERIMENTAL)**"
 
         if self.optional:
-            doc += f" *(Optional)*"
+            doc += " *(Optional)*"
 
         if self.description:
             desc = self.description.replace("`", "``").replace("\n", " ")
@@ -662,7 +659,7 @@ class CdpCommand:
         if self.deprecated:
             doc += f"\n\n.. deprecated:: {current_version}"
         if self.experimental:
-            doc += f"\n\n**EXPERIMENTAL**"
+            doc += "\n\n**EXPERIMENTAL**"
         if self.parameters and doc:
             doc += "\n\n"
         elif not self.parameters and self.returns:
@@ -852,7 +849,7 @@ class CdpDomain:
             code += "\n\n"
         code += "\n"
         item_iter_t = typing.Union[CdpEvent, CdpCommand, CdpType]
-        item_iter: typing.Iterator[item_iter_t] = itertools.chain(
+        item_iter: typing.Iterator[item_iter_t] = itertools.chain( # pyright: ignore[reportInvalidTypeForm]
             iter(self.types),
             iter(self.commands),
             iter(self.events),

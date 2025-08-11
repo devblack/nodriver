@@ -898,6 +898,9 @@ class CSSContainerQuery:
     #: true if the query contains scroll-state() queries.
     queries_scroll_state: typing.Optional[bool] = None
 
+    #: true if the query contains anchored() queries.
+    queries_anchored: typing.Optional[bool] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['text'] = self.text
@@ -913,6 +916,8 @@ class CSSContainerQuery:
             json['logicalAxes'] = self.logical_axes.to_json()
         if self.queries_scroll_state is not None:
             json['queriesScrollState'] = self.queries_scroll_state
+        if self.queries_anchored is not None:
+            json['queriesAnchored'] = self.queries_anchored
         return json
 
     @classmethod
@@ -925,6 +930,7 @@ class CSSContainerQuery:
             physical_axes=dom.PhysicalAxes.from_json(json['physicalAxes']) if json.get('physicalAxes', None) is not None else None,
             logical_axes=dom.LogicalAxes.from_json(json['logicalAxes']) if json.get('logicalAxes', None) is not None else None,
             queries_scroll_state=bool(json['queriesScrollState']) if json.get('queriesScrollState', None) is not None else None,
+            queries_anchored=bool(json['queriesAnchored']) if json.get('queriesAnchored', None) is not None else None,
         )
 
 
@@ -1840,7 +1846,7 @@ def resolve_values(
 
     **EXPERIMENTAL**
 
-    :param values: Substitution functions (var()/env()/attr()) and cascade-dependent keywords (revert/revert-layer) do not work.
+    :param values: Cascade-dependent keywords (revert/revert-layer) do not work.
     :param node_id: Id of the node in whose context the expression is evaluated
     :param property_name: *(Optional)* Only longhands and custom property names are accepted.
     :param pseudo_type: *(Optional)* Pseudo element type, only works for pseudo elements that generate elements in the tree, such as ::before and ::after.

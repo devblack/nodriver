@@ -243,6 +243,7 @@ class PermissionsPolicyFeature(enum.Enum):
     DEFERRED_FETCH = "deferred-fetch"
     DEFERRED_FETCH_MINIMAL = "deferred-fetch-minimal"
     DEVICE_ATTRIBUTES = "device-attributes"
+    DIGITAL_CREDENTIALS_CREATE = "digital-credentials-create"
     DIGITAL_CREDENTIALS_GET = "digital-credentials-get"
     DIRECT_SOCKETS = "direct-sockets"
     DIRECT_SOCKETS_PRIVATE = "direct-sockets-private"
@@ -3986,8 +3987,7 @@ class CompilationCacheProduced:
     '''
     **EXPERIMENTAL**
 
-    Issued for every compilation cache generated. Is only available
-    if Page.setGenerateCompilationCache is enabled.
+    Issued for every compilation cache generated.
     '''
     url: str
     #: Base64-encoded data (Encoded as a base64 string when passed over JSON)

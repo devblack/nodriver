@@ -86,6 +86,7 @@ class PseudoType(enum.Enum):
     BEFORE = "before"
     AFTER = "after"
     PICKER_ICON = "picker-icon"
+    INTEREST_HINT = "interest-hint"
     MARKER = "marker"
     BACKDROP = "backdrop"
     COLUMN = "column"
@@ -1731,14 +1732,15 @@ def get_container_for_node(
         container_name: typing.Optional[str] = None,
         physical_axes: typing.Optional[PhysicalAxes] = None,
         logical_axes: typing.Optional[LogicalAxes] = None,
-        queries_scroll_state: typing.Optional[bool] = None
+        queries_scroll_state: typing.Optional[bool] = None,
+        queries_anchored: typing.Optional[bool] = None
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Optional[NodeId]]:
     '''
     Returns the query container of the given node based on container query
     conditions: containerName, physical and logical axes, and whether it queries
-    scroll-state. If no axes are provided and queriesScrollState is false, the
-    style container is returned, which is the direct parent or the closest
-    element with a matching container-name.
+    scroll-state or anchored elements. If no axes are provided and
+    queriesScrollState is false, the style container is returned, which is the
+    direct parent or the closest element with a matching container-name.
 
     **EXPERIMENTAL**
 
@@ -1747,6 +1749,7 @@ def get_container_for_node(
     :param physical_axes: *(Optional)*
     :param logical_axes: *(Optional)*
     :param queries_scroll_state: *(Optional)*
+    :param queries_anchored: *(Optional)*
     :returns: *(Optional)* The container node for the given node, or null if not found.
     '''
     params: T_JSON_DICT = dict()
@@ -1759,6 +1762,8 @@ def get_container_for_node(
         params['logicalAxes'] = logical_axes.to_json()
     if queries_scroll_state is not None:
         params['queriesScrollState'] = queries_scroll_state
+    if queries_anchored is not None:
+        params['queriesAnchored'] = queries_anchored
     cmd_dict: T_JSON_DICT = {
         'method': 'DOM.getContainerForNode',
         'params': params,

@@ -7,7 +7,6 @@ import logging
 import os
 import pathlib
 import pickle
-import typing
 import urllib.parse
 import urllib.request
 import warnings
@@ -432,7 +431,6 @@ class Browser:
 
     async def tile_windows(self, windows=None, max_columns: int = 0):
         import math
-
         import mss
 
         m = mss.mss()
@@ -621,7 +619,7 @@ class CookieJar:
 
     async def get_all(
         self, requests_cookie_format: bool = False
-    ) -> List[Union[cdp.network.Cookie, "http.cookiejar.Cookie"]]:
+    ) -> List[Union[cdp.network.Cookie, "http.cookiejar.Cookie"]]:  # noqa: F821
         """
         get all cookies
 
@@ -798,7 +796,7 @@ class HTTPApi:
         self.api = "http://%s:%d" % (self.host, self.port)
 
     @classmethod
-    def from_target(cls, target: "Target"):
+    def from_target(cls, target: "Target"):  # noqa: F821
         ws_url = urllib.parse.urlparse(target.websocket_url)
         inst = cls((ws_url.hostname, ws_url.port))
         return inst
