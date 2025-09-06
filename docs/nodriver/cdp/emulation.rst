@@ -102,6 +102,21 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: WorkAreaInsets
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: ScreenId
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: ScreenInfo
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: DisabledImageType
       :members:
       :undoc-members:
@@ -119,6 +134,8 @@ commands, and ``z`` is the return type you should pay attention
 to. For more information, see
 :ref:`Getting Started: Commands <getting-started-commands>`.
 
+.. autofunction:: add_screen
+
 .. autofunction:: can_emulate
 
 .. autofunction:: clear_device_metrics_override
@@ -132,6 +149,10 @@ to. For more information, see
 .. autofunction:: clear_idle_override
 
 .. autofunction:: get_overridden_sensor_information
+
+.. autofunction:: get_screen_infos
+
+.. autofunction:: remove_screen
 
 .. autofunction:: reset_page_scale_factor
 

@@ -640,6 +640,25 @@ class CSSComputedStyleProperty:
 
 
 @dataclass
+class ComputedStyleExtraFields:
+    #: Returns whether or not this node is being rendered with base appearance,
+    #: which happens when it has its appearance property set to base/base-select
+    #: or it is in the subtree of an element being rendered with base appearance.
+    is_appearance_base: bool
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['isAppearanceBase'] = self.is_appearance_base
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ComputedStyleExtraFields:
+        return cls(
+            is_appearance_base=bool(json['isAppearanceBase']),
+        )
+
+
+@dataclass
 class CSSStyle:
     '''
     CSS style representation.
@@ -1809,12 +1828,15 @@ def get_background_colors(
 
 def get_computed_style_for_node(
         node_id: dom.NodeId
-    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.List[CSSComputedStyleProperty]]:
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Tuple[typing.List[CSSComputedStyleProperty], ComputedStyleExtraFields]]:
     '''
     Returns the computed style for a DOM node identified by ``nodeId``.
 
     :param node_id:
-    :returns: Computed style for the specified DOM node.
+    :returns: A tuple with the following items:
+
+        0. **computedStyle** - Computed style for the specified DOM node.
+        1. **extraFields** - A list of non-standard "extra fields" which blink stores alongside each computed style.
     '''
     params: T_JSON_DICT = dict()
     params['nodeId'] = node_id.to_json()
@@ -1823,7 +1845,10 @@ def get_computed_style_for_node(
         'params': params,
     }
     json = yield cmd_dict
-    return [CSSComputedStyleProperty.from_json(i) for i in json['computedStyle']]
+    return (
+        [CSSComputedStyleProperty.from_json(i) for i in json['computedStyle']],
+        ComputedStyleExtraFields.from_json(json['extraFields'])
+    )
 
 
 def resolve_values(

@@ -118,6 +118,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: IpProxyStatus
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: CorsError
       :members:
       :undoc-members:
@@ -430,6 +435,8 @@ to. For more information, see
 
 .. autofunction:: get_cookies
 
+.. autofunction:: get_ip_protection_proxy_status
+
 .. autofunction:: get_request_post_data
 
 .. autofunction:: get_response_body
@@ -461,6 +468,8 @@ to. For more information, see
 .. autofunction:: set_cookies
 
 .. autofunction:: set_extra_http_headers
+
+.. autofunction:: set_ip_protection_proxy_bypass_enabled
 
 .. autofunction:: set_request_interception
 
