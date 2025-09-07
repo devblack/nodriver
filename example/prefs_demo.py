@@ -33,7 +33,7 @@ class Timing:
 
 
 config = uc.Config()
-config.force_cleanup = True  # force cleanup of the browser profile
+config.force_cleanup = False  # force cleanup of the browser profile
 config.prefs = {
     "profile.default_content_setting_values.images": 2,  # disable images
     "profile.default_content_setting_values.notifications": 2,  # disable notifications
@@ -45,7 +45,7 @@ config.prefs = {
 async def main():
 
     browser = await uc.start(prefs=config.prefs, headless=False, user_data_dir="C:/temp/test_profile")
-    page = await browser.get('https://www.nowsecure.nl')
+    await browser.get('https://www.nowsecure.nl')
 
     await asyncio.sleep(15)  # wait for a while to see the result
 
