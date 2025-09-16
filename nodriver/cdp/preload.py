@@ -73,6 +73,10 @@ class RuleSet:
     #: TODO(https://crbug.com/1425354): Replace this property with structured error.
     error_message: typing.Optional[str] = None
 
+    #: For more details, see:
+    #: https://github.com/WICG/nav-speculation/blob/main/speculation-rules-tags.md
+    tag: typing.Optional[str] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['id'] = self.id_.to_json()
@@ -88,6 +92,8 @@ class RuleSet:
             json['errorType'] = self.error_type.to_json()
         if self.error_message is not None:
             json['errorMessage'] = self.error_message
+        if self.tag is not None:
+            json['tag'] = self.tag
         return json
 
     @classmethod
@@ -101,6 +107,7 @@ class RuleSet:
             request_id=network.RequestId.from_json(json['requestId']) if json.get('requestId', None) is not None else None,
             error_type=RuleSetErrorType.from_json(json['errorType']) if json.get('errorType', None) is not None else None,
             error_message=str(json['errorMessage']) if json.get('errorMessage', None) is not None else None,
+            tag=str(json['tag']) if json.get('tag', None) is not None else None,
         )
 
 

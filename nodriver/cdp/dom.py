@@ -311,6 +311,8 @@ class Node:
 
     is_scrollable: typing.Optional[bool] = None
 
+    affected_by_starting_styles: typing.Optional[bool] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['nodeId'] = self.node_id.to_json()
@@ -371,6 +373,8 @@ class Node:
             json['assignedSlot'] = self.assigned_slot.to_json()
         if self.is_scrollable is not None:
             json['isScrollable'] = self.is_scrollable
+        if self.affected_by_starting_styles is not None:
+            json['affectedByStartingStyles'] = self.affected_by_starting_styles
         return json
 
     @classmethod
@@ -408,6 +412,7 @@ class Node:
             compatibility_mode=CompatibilityMode.from_json(json['compatibilityMode']) if json.get('compatibilityMode', None) is not None else None,
             assigned_slot=BackendNode.from_json(json['assignedSlot']) if json.get('assignedSlot', None) is not None else None,
             is_scrollable=bool(json['isScrollable']) if json.get('isScrollable', None) is not None else None,
+            affected_by_starting_styles=bool(json['affectedByStartingStyles']) if json.get('affectedByStartingStyles', None) is not None else None,
         )
 
 
@@ -2075,6 +2080,27 @@ class ScrollableFlagUpdated:
         return cls(
             node_id=NodeId.from_json(json['nodeId']),
             is_scrollable=bool(json['isScrollable'])
+        )
+
+
+@event_class('DOM.affectedByStartingStylesFlagUpdated')
+@dataclass
+class AffectedByStartingStylesFlagUpdated:
+    '''
+    **EXPERIMENTAL**
+
+    Fired when a node's starting styles changes.
+    '''
+    #: The id of the node.
+    node_id: NodeId
+    #: If the node has starting styles.
+    affected_by_starting_styles: bool
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> AffectedByStartingStylesFlagUpdated:
+        return cls(
+            node_id=NodeId.from_json(json['nodeId']),
+            affected_by_starting_styles=bool(json['affectedByStartingStyles'])
         )
 
 

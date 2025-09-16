@@ -293,6 +293,11 @@ you use the event's attributes.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: AffectedByStartingStylesFlagUpdated
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: PseudoElementRemoved
       :members:
       :undoc-members:
