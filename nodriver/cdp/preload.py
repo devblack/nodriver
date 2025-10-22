@@ -132,6 +132,7 @@ class SpeculationAction(enum.Enum):
     '''
     PREFETCH = "Prefetch"
     PRERENDER = "Prerender"
+    PRERENDER_UNTIL_SCRIPT = "PrerenderUntilScript"
 
     def to_json(self) -> str:
         return self.value

@@ -427,6 +427,9 @@ class CSSRule:
     #: Array of selectors from ancestor style rules, sorted by distance from the current rule.
     nesting_selectors: typing.Optional[typing.List[str]] = None
 
+    #: The BackendNodeId of the DOM node that constitutes the origin tree scope of this rule.
+    origin_tree_scope_node_id: typing.Optional[dom.BackendNodeId] = None
+
     #: Media list array (for rules involving media queries). The array enumerates media queries
     #: starting with the innermost one, going outwards.
     media: typing.Optional[typing.List[CSSMedia]] = None
@@ -463,6 +466,8 @@ class CSSRule:
             json['styleSheetId'] = self.style_sheet_id.to_json()
         if self.nesting_selectors is not None:
             json['nestingSelectors'] = [i for i in self.nesting_selectors]
+        if self.origin_tree_scope_node_id is not None:
+            json['originTreeScopeNodeId'] = self.origin_tree_scope_node_id.to_json()
         if self.media is not None:
             json['media'] = [i.to_json() for i in self.media]
         if self.container_queries is not None:
@@ -487,6 +492,7 @@ class CSSRule:
             style=CSSStyle.from_json(json['style']),
             style_sheet_id=StyleSheetId.from_json(json['styleSheetId']) if json.get('styleSheetId', None) is not None else None,
             nesting_selectors=[str(i) for i in json['nestingSelectors']] if json.get('nestingSelectors', None) is not None else None,
+            origin_tree_scope_node_id=dom.BackendNodeId.from_json(json['originTreeScopeNodeId']) if json.get('originTreeScopeNodeId', None) is not None else None,
             media=[CSSMedia.from_json(i) for i in json['media']] if json.get('media', None) is not None else None,
             container_queries=[CSSContainerQuery.from_json(i) for i in json['containerQueries']] if json.get('containerQueries', None) is not None else None,
             supports=[CSSSupports.from_json(i) for i in json['supports']] if json.get('supports', None) is not None else None,

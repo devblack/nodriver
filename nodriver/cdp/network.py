@@ -453,6 +453,9 @@ class Request:
     #: request corresponding to the main frame.
     is_same_site: typing.Optional[bool] = None
 
+    #: True when the resource request is ad-related.
+    is_ad_related: typing.Optional[bool] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['url'] = self.url
@@ -476,6 +479,8 @@ class Request:
             json['trustTokenParams'] = self.trust_token_params.to_json()
         if self.is_same_site is not None:
             json['isSameSite'] = self.is_same_site
+        if self.is_ad_related is not None:
+            json['isAdRelated'] = self.is_ad_related
         return json
 
     @classmethod
@@ -494,6 +499,7 @@ class Request:
             is_link_preload=bool(json['isLinkPreload']) if json.get('isLinkPreload', None) is not None else None,
             trust_token_params=TrustTokenParams.from_json(json['trustTokenParams']) if json.get('trustTokenParams', None) is not None else None,
             is_same_site=bool(json['isSameSite']) if json.get('isSameSite', None) is not None else None,
+            is_ad_related=bool(json['isAdRelated']) if json.get('isAdRelated', None) is not None else None,
         )
 
 
@@ -2042,6 +2048,88 @@ class ContentEncoding(enum.Enum):
         return cls(json)
 
 
+@dataclass
+class NetworkConditions:
+    #: Only matching requests will be affected by these conditions. Patterns use the URLPattern constructor string
+    #: syntax (https://urlpattern.spec.whatwg.org/) and must be absolute. If the pattern is empty, all requests are
+    #: matched (including p2p connections).
+    url_pattern: str
+
+    #: Minimum latency from request sent to response headers received (ms).
+    latency: float
+
+    #: Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+    download_throughput: float
+
+    #: Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
+    upload_throughput: float
+
+    #: Connection type if known.
+    connection_type: typing.Optional[ConnectionType] = None
+
+    #: WebRTC packet loss (percent, 0-100). 0 disables packet loss emulation, 100 drops all the packets.
+    packet_loss: typing.Optional[float] = None
+
+    #: WebRTC packet queue length (packet). 0 removes any queue length limitations.
+    packet_queue_length: typing.Optional[int] = None
+
+    #: WebRTC packetReordering feature.
+    packet_reordering: typing.Optional[bool] = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['urlPattern'] = self.url_pattern
+        json['latency'] = self.latency
+        json['downloadThroughput'] = self.download_throughput
+        json['uploadThroughput'] = self.upload_throughput
+        if self.connection_type is not None:
+            json['connectionType'] = self.connection_type.to_json()
+        if self.packet_loss is not None:
+            json['packetLoss'] = self.packet_loss
+        if self.packet_queue_length is not None:
+            json['packetQueueLength'] = self.packet_queue_length
+        if self.packet_reordering is not None:
+            json['packetReordering'] = self.packet_reordering
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> NetworkConditions:
+        return cls(
+            url_pattern=str(json['urlPattern']),
+            latency=float(json['latency']),
+            download_throughput=float(json['downloadThroughput']),
+            upload_throughput=float(json['uploadThroughput']),
+            connection_type=ConnectionType.from_json(json['connectionType']) if json.get('connectionType', None) is not None else None,
+            packet_loss=float(json['packetLoss']) if json.get('packetLoss', None) is not None else None,
+            packet_queue_length=int(json['packetQueueLength']) if json.get('packetQueueLength', None) is not None else None,
+            packet_reordering=bool(json['packetReordering']) if json.get('packetReordering', None) is not None else None,
+        )
+
+
+@dataclass
+class BlockPattern:
+    #: URL pattern to match. Patterns use the URLPattern constructor string syntax
+    #: (https://urlpattern.spec.whatwg.org/) and must be absolute. Example: ``*://*:*/*.css``.
+    url_pattern: str
+
+    #: Whether or not to block the pattern. If false, a matching request will not be blocked even if it matches a later
+    #: ``BlockPattern``.
+    block: bool
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['urlPattern'] = self.url_pattern
+        json['block'] = self.block
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> BlockPattern:
+        return cls(
+            url_pattern=str(json['urlPattern']),
+            block=bool(json['block']),
+        )
+
+
 class DirectSocketDnsQueryType(enum.Enum):
     IPV4 = "ipv4"
     IPV6 = "ipv6"
@@ -2811,6 +2899,7 @@ def disable() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
     json = yield cmd_dict
 
 
+@deprecated(version="1.3")
 def emulate_network_conditions(
         offline: bool,
         latency: float,
@@ -2822,7 +2911,10 @@ def emulate_network_conditions(
         packet_reordering: typing.Optional[bool] = None
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
     '''
-    Activates emulation of network conditions.
+    Activates emulation of network conditions. This command is deprecated in favor of the emulateNetworkConditionsByRule
+    and overrideNetworkState commands, which can be used together to the same effect.
+
+    .. deprecated:: 1.3
 
     :param offline: True to emulate internet disconnection.
     :param latency: Minimum latency from request sent to response headers received (ms).
@@ -2848,6 +2940,64 @@ def emulate_network_conditions(
         params['packetReordering'] = packet_reordering
     cmd_dict: T_JSON_DICT = {
         'method': 'Network.emulateNetworkConditions',
+        'params': params,
+    }
+    json = yield cmd_dict
+
+
+def emulate_network_conditions_by_rule(
+        offline: bool,
+        matched_network_conditions: typing.List[NetworkConditions]
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.List[str]]:
+    '''
+    Activates emulation of network conditions for individual requests using URL match patterns. Unlike the deprecated
+    Network.emulateNetworkConditions this method does not affect ``navigator`` state. Use Network.overrideNetworkState to
+    explicitly modify ``navigator`` behavior.
+
+    **EXPERIMENTAL**
+
+    :param offline: True to emulate internet disconnection.
+    :param matched_network_conditions: Configure conditions for matching requests. If multiple entries match a request, the first entry wins.  Global conditions can be configured by leaving the urlPattern for the conditions empty. These global conditions are also applied for throttling of p2p connections.
+    :returns: An id for each entry in matchedNetworkConditions. The id will be included in the requestWillBeSentExtraInfo for requests affected by a rule.
+    '''
+    params: T_JSON_DICT = dict()
+    params['offline'] = offline
+    params['matchedNetworkConditions'] = [i.to_json() for i in matched_network_conditions]
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Network.emulateNetworkConditionsByRule',
+        'params': params,
+    }
+    json = yield cmd_dict
+    return [str(i) for i in json['ruleIds']]
+
+
+def override_network_state(
+        offline: bool,
+        latency: float,
+        download_throughput: float,
+        upload_throughput: float,
+        connection_type: typing.Optional[ConnectionType] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Override the state of navigator.onLine and navigator.connection.
+
+    **EXPERIMENTAL**
+
+    :param offline: True to emulate internet disconnection.
+    :param latency: Minimum latency from request sent to response headers received (ms).
+    :param download_throughput: Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+    :param upload_throughput: Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
+    :param connection_type: *(Optional)* Connection type if known.
+    '''
+    params: T_JSON_DICT = dict()
+    params['offline'] = offline
+    params['latency'] = latency
+    params['downloadThroughput'] = download_throughput
+    params['uploadThroughput'] = upload_throughput
+    if connection_type is not None:
+        params['connectionType'] = connection_type.to_json()
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Network.overrideNetworkState',
         'params': params,
     }
     json = yield cmd_dict
@@ -3096,17 +3246,22 @@ def search_in_response_body(
 
 
 def set_blocked_ur_ls(
-        urls: typing.List[str]
+        url_patterns: typing.Optional[typing.List[BlockPattern]] = None,
+        urls: typing.Optional[typing.List[str]] = None
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
     '''
     Blocks URLs from loading.
 
     **EXPERIMENTAL**
 
-    :param urls: URL patterns to block. Wildcards ('*') are allowed.
+    :param url_patterns: *(Optional)* Patterns to match in the order in which they are given. These patterns also take precedence over any wildcard patterns defined in ```urls```.
+    :param urls: **(DEPRECATED)** *(Optional)* URL patterns to block. Wildcards ('*') are allowed.
     '''
     params: T_JSON_DICT = dict()
-    params['urls'] = [i for i in urls]
+    if url_patterns is not None:
+        params['urlPatterns'] = [i.to_json() for i in url_patterns]
+    if urls is not None:
+        params['urls'] = [i for i in urls]
     cmd_dict: T_JSON_DICT = {
         'method': 'Network.setBlockedURLs',
         'params': params,
@@ -4275,6 +4430,9 @@ class RequestWillBeSentExtraInfo:
     client_security_state: typing.Optional[ClientSecurityState]
     #: Whether the site has partitioned cookies stored in a partition different than the current one.
     site_has_cookie_in_other_partition: typing.Optional[bool]
+    #: The network conditions id if this request was affected by network conditions configured via
+    #: emulateNetworkConditionsByRule.
+    applied_network_conditions_id: typing.Optional[str]
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> RequestWillBeSentExtraInfo:
@@ -4284,7 +4442,8 @@ class RequestWillBeSentExtraInfo:
             headers=Headers.from_json(json['headers']),
             connect_timing=ConnectTiming.from_json(json['connectTiming']),
             client_security_state=ClientSecurityState.from_json(json['clientSecurityState']) if json.get('clientSecurityState', None) is not None else None,
-            site_has_cookie_in_other_partition=bool(json['siteHasCookieInOtherPartition']) if json.get('siteHasCookieInOtherPartition', None) is not None else None
+            site_has_cookie_in_other_partition=bool(json['siteHasCookieInOtherPartition']) if json.get('siteHasCookieInOtherPartition', None) is not None else None,
+            applied_network_conditions_id=str(json['appliedNetworkConditionsId']) if json.get('appliedNetworkConditionsId', None) is not None else None
         )
 
 

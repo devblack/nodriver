@@ -290,6 +290,8 @@ to. For more information, see
 
 .. autofunction:: get_shared_storage_metadata
 
+.. autofunction:: get_storage_key
+
 .. autofunction:: get_storage_key_for_frame
 
 .. autofunction:: get_trust_tokens

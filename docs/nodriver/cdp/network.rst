@@ -288,6 +288,16 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: NetworkConditions
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: BlockPattern
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: DirectSocketDnsQueryType
       :members:
       :undoc-members:
@@ -425,6 +435,8 @@ to. For more information, see
 
 .. autofunction:: emulate_network_conditions
 
+.. autofunction:: emulate_network_conditions_by_rule
+
 .. autofunction:: enable
 
 .. autofunction:: enable_reporting_api
@@ -446,6 +458,8 @@ to. For more information, see
 .. autofunction:: get_security_isolation_status
 
 .. autofunction:: load_network_resource
+
+.. autofunction:: override_network_state
 
 .. autofunction:: replay_xhr
 
