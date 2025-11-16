@@ -633,7 +633,8 @@ def set_remote_locations(
 
 
 def open_dev_tools(
-        target_id: TargetID
+        target_id: TargetID,
+        panel_id: typing.Optional[str] = None
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,TargetID]:
     '''
     Opens a DevTools window for the target.
@@ -641,10 +642,13 @@ def open_dev_tools(
     **EXPERIMENTAL**
 
     :param target_id: This can be the page or tab target ID.
+    :param panel_id: *(Optional)* The id of the panel we want DevTools to open initially. Currently supported panels are elements, console, network, sources, resources and performance.
     :returns: The targetId of DevTools page target.
     '''
     params: T_JSON_DICT = dict()
     params['targetId'] = target_id.to_json()
+    if panel_id is not None:
+        params['panelId'] = panel_id
     cmd_dict: T_JSON_DICT = {
         'method': 'Target.openDevTools',
         'params': params,

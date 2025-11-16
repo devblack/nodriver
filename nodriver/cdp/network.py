@@ -699,27 +699,6 @@ class BlockedReason(enum.Enum):
         return cls(json)
 
 
-class IpProxyStatus(enum.Enum):
-    '''
-    Sets Controls for IP Proxy of requests.
-    Page reload is required before the new behavior will be observed.
-    '''
-    AVAILABLE = "Available"
-    FEATURE_NOT_ENABLED = "FeatureNotEnabled"
-    MASKED_DOMAIN_LIST_NOT_ENABLED = "MaskedDomainListNotEnabled"
-    MASKED_DOMAIN_LIST_NOT_POPULATED = "MaskedDomainListNotPopulated"
-    AUTH_TOKENS_UNAVAILABLE = "AuthTokensUnavailable"
-    UNAVAILABLE = "Unavailable"
-    BYPASSED_BY_DEV_TOOLS = "BypassedByDevTools"
-
-    def to_json(self) -> str:
-        return self.value
-
-    @classmethod
-    def from_json(cls, json: str) -> IpProxyStatus:
-        return cls(json)
-
-
 class CorsError(enum.Enum):
     '''
     The reason why request was blocked.
@@ -1012,10 +991,6 @@ class Response:
     #: Security details for the request.
     security_details: typing.Optional[SecurityDetails] = None
 
-    #: Indicates whether the request was sent through IP Protection proxies. If
-    #: set to true, the request used the IP Protection privacy feature.
-    is_ip_protection_used: typing.Optional[bool] = None
-
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['url'] = self.url
@@ -1062,8 +1037,6 @@ class Response:
             json['alternateProtocolUsage'] = self.alternate_protocol_usage.to_json()
         if self.security_details is not None:
             json['securityDetails'] = self.security_details.to_json()
-        if self.is_ip_protection_used is not None:
-            json['isIpProtectionUsed'] = self.is_ip_protection_used
         return json
 
     @classmethod
@@ -1096,7 +1069,6 @@ class Response:
             protocol=str(json['protocol']) if json.get('protocol', None) is not None else None,
             alternate_protocol_usage=AlternateProtocolUsage.from_json(json['alternateProtocolUsage']) if json.get('alternateProtocolUsage', None) is not None else None,
             security_details=SecurityDetails.from_json(json['securityDetails']) if json.get('securityDetails', None) is not None else None,
-            is_ip_protection_used=bool(json['isIpProtectionUsed']) if json.get('isIpProtectionUsed', None) is not None else None,
         )
 
 
@@ -2266,8 +2238,6 @@ class PrivateNetworkRequestPolicy(enum.Enum):
     ALLOW = "Allow"
     BLOCK_FROM_INSECURE_TO_MORE_PRIVATE = "BlockFromInsecureToMorePrivate"
     WARN_FROM_INSECURE_TO_MORE_PRIVATE = "WarnFromInsecureToMorePrivate"
-    PREFLIGHT_BLOCK = "PreflightBlock"
-    PREFLIGHT_WARN = "PreflightWarn"
     PERMISSION_BLOCK = "PermissionBlock"
     PERMISSION_WARN = "PermissionWarn"
 
@@ -2666,41 +2636,6 @@ class LoadNetworkResourceOptions:
             disable_cache=bool(json['disableCache']),
             include_credentials=bool(json['includeCredentials']),
         )
-
-
-def get_ip_protection_proxy_status() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,IpProxyStatus]:
-    '''
-    Returns enum representing if IP Proxy of requests is available
-    or reason it is not active.
-
-    **EXPERIMENTAL**
-
-    :returns: Whether IP proxy is available
-    '''
-    cmd_dict: T_JSON_DICT = {
-        'method': 'Network.getIPProtectionProxyStatus',
-    }
-    json = yield cmd_dict
-    return IpProxyStatus.from_json(json['status'])
-
-
-def set_ip_protection_proxy_bypass_enabled(
-        enabled: bool
-    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
-    '''
-    Sets bypass IP Protection Proxy boolean.
-
-    **EXPERIMENTAL**
-
-    :param enabled: Whether IP Proxy is being bypassed by devtools; false by default.
-    '''
-    params: T_JSON_DICT = dict()
-    params['enabled'] = enabled
-    cmd_dict: T_JSON_DICT = {
-        'method': 'Network.setIPProtectionProxyBypassEnabled',
-        'params': params,
-    }
-    json = yield cmd_dict
 
 
 def set_accepted_encodings(
@@ -4579,105 +4514,6 @@ class PolicyUpdated:
     def from_json(cls, json: T_JSON_DICT) -> PolicyUpdated:
         return cls(
 
-        )
-
-
-@event_class('Network.subresourceWebBundleMetadataReceived')
-@dataclass
-class SubresourceWebBundleMetadataReceived:
-    '''
-    **EXPERIMENTAL**
-
-    Fired once when parsing the .wbn file has succeeded.
-    The event contains the information about the web bundle contents.
-    '''
-    #: Request identifier. Used to match this information to another event.
-    request_id: RequestId
-    #: A list of URLs of resources in the subresource Web Bundle.
-    urls: typing.List[str]
-
-    @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> SubresourceWebBundleMetadataReceived:
-        return cls(
-            request_id=RequestId.from_json(json['requestId']),
-            urls=[str(i) for i in json['urls']]
-        )
-
-
-@event_class('Network.subresourceWebBundleMetadataError')
-@dataclass
-class SubresourceWebBundleMetadataError:
-    '''
-    **EXPERIMENTAL**
-
-    Fired once when parsing the .wbn file has failed.
-    '''
-    #: Request identifier. Used to match this information to another event.
-    request_id: RequestId
-    #: Error message
-    error_message: str
-
-    @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> SubresourceWebBundleMetadataError:
-        return cls(
-            request_id=RequestId.from_json(json['requestId']),
-            error_message=str(json['errorMessage'])
-        )
-
-
-@event_class('Network.subresourceWebBundleInnerResponseParsed')
-@dataclass
-class SubresourceWebBundleInnerResponseParsed:
-    '''
-    **EXPERIMENTAL**
-
-    Fired when handling requests for resources within a .wbn file.
-    Note: this will only be fired for resources that are requested by the webpage.
-    '''
-    #: Request identifier of the subresource request
-    inner_request_id: RequestId
-    #: URL of the subresource resource.
-    inner_request_url: str
-    #: Bundle request identifier. Used to match this information to another event.
-    #: This made be absent in case when the instrumentation was enabled only
-    #: after webbundle was parsed.
-    bundle_request_id: typing.Optional[RequestId]
-
-    @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> SubresourceWebBundleInnerResponseParsed:
-        return cls(
-            inner_request_id=RequestId.from_json(json['innerRequestId']),
-            inner_request_url=str(json['innerRequestURL']),
-            bundle_request_id=RequestId.from_json(json['bundleRequestId']) if json.get('bundleRequestId', None) is not None else None
-        )
-
-
-@event_class('Network.subresourceWebBundleInnerResponseError')
-@dataclass
-class SubresourceWebBundleInnerResponseError:
-    '''
-    **EXPERIMENTAL**
-
-    Fired when request for resources within a .wbn file failed.
-    '''
-    #: Request identifier of the subresource request
-    inner_request_id: RequestId
-    #: URL of the subresource resource.
-    inner_request_url: str
-    #: Error message
-    error_message: str
-    #: Bundle request identifier. Used to match this information to another event.
-    #: This made be absent in case when the instrumentation was enabled only
-    #: after webbundle was parsed.
-    bundle_request_id: typing.Optional[RequestId]
-
-    @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> SubresourceWebBundleInnerResponseError:
-        return cls(
-            inner_request_id=RequestId.from_json(json['innerRequestId']),
-            inner_request_url=str(json['innerRequestURL']),
-            error_message=str(json['errorMessage']),
-            bundle_request_id=RequestId.from_json(json['bundleRequestId']) if json.get('bundleRequestId', None) is not None else None
         )
 
 

@@ -278,7 +278,6 @@ class PermissionsPolicyFeature(enum.Enum):
     OTP_CREDENTIALS = "otp-credentials"
     PAYMENT = "payment"
     PICTURE_IN_PICTURE = "picture-in-picture"
-    POPINS = "popins"
     PRIVATE_AGGREGATION = "private-aggregation"
     PRIVATE_STATE_TOKEN_ISSUANCE = "private-state-token-issuance"
     PRIVATE_STATE_TOKEN_REDEMPTION = "private-state-token-redemption"

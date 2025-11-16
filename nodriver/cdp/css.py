@@ -1433,6 +1433,56 @@ class CSSFontPaletteValuesRule:
 
 
 @dataclass
+class CSSAtRule:
+    '''
+    CSS generic @rule representation.
+    '''
+    #: Type of at-rule.
+    type_: str
+
+    #: Parent stylesheet's origin.
+    origin: StyleSheetOrigin
+
+    #: Associated style declaration.
+    style: CSSStyle
+
+    #: Subsection of font-feature-values, if this is a subsection.
+    subsection: typing.Optional[str] = None
+
+    #: LINT.ThenChange(//third_party/blink/renderer/core/inspector/inspector_style_sheet.cc:FontVariantAlternatesFeatureType,//third_party/blink/renderer/core/inspector/inspector_css_agent.cc:FontVariantAlternatesFeatureType)
+    #: Associated name, if applicable.
+    name: typing.Optional[Value] = None
+
+    #: The css style sheet identifier (absent for user agent stylesheet and user-specified
+    #: stylesheet rules) this rule came from.
+    style_sheet_id: typing.Optional[StyleSheetId] = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['type'] = self.type_
+        json['origin'] = self.origin.to_json()
+        json['style'] = self.style.to_json()
+        if self.subsection is not None:
+            json['subsection'] = self.subsection
+        if self.name is not None:
+            json['name'] = self.name.to_json()
+        if self.style_sheet_id is not None:
+            json['styleSheetId'] = self.style_sheet_id.to_json()
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> CSSAtRule:
+        return cls(
+            type_=str(json['type']),
+            origin=StyleSheetOrigin.from_json(json['origin']),
+            style=CSSStyle.from_json(json['style']),
+            subsection=str(json['subsection']) if json.get('subsection', None) is not None else None,
+            name=Value.from_json(json['name']) if json.get('name', None) is not None else None,
+            style_sheet_id=StyleSheetId.from_json(json['styleSheetId']) if json.get('styleSheetId', None) is not None else None,
+        )
+
+
+@dataclass
 class CSSPropertyRule:
     '''
     CSS property at-rule representation.
@@ -1983,7 +2033,7 @@ def get_animated_styles_for_node(
 
 def get_matched_styles_for_node(
         node_id: dom.NodeId
-    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Tuple[typing.Optional[CSSStyle], typing.Optional[CSSStyle], typing.Optional[typing.List[RuleMatch]], typing.Optional[typing.List[PseudoElementMatches]], typing.Optional[typing.List[InheritedStyleEntry]], typing.Optional[typing.List[InheritedPseudoElementMatches]], typing.Optional[typing.List[CSSKeyframesRule]], typing.Optional[typing.List[CSSPositionTryRule]], typing.Optional[int], typing.Optional[typing.List[CSSPropertyRule]], typing.Optional[typing.List[CSSPropertyRegistration]], typing.Optional[CSSFontPaletteValuesRule], typing.Optional[dom.NodeId], typing.Optional[typing.List[CSSFunctionRule]]]]:
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Tuple[typing.Optional[CSSStyle], typing.Optional[CSSStyle], typing.Optional[typing.List[RuleMatch]], typing.Optional[typing.List[PseudoElementMatches]], typing.Optional[typing.List[InheritedStyleEntry]], typing.Optional[typing.List[InheritedPseudoElementMatches]], typing.Optional[typing.List[CSSKeyframesRule]], typing.Optional[typing.List[CSSPositionTryRule]], typing.Optional[int], typing.Optional[typing.List[CSSPropertyRule]], typing.Optional[typing.List[CSSPropertyRegistration]], typing.Optional[CSSFontPaletteValuesRule], typing.Optional[typing.List[CSSAtRule]], typing.Optional[dom.NodeId], typing.Optional[typing.List[CSSFunctionRule]]]]:
     '''
     Returns requested styles for a DOM node identified by ``nodeId``.
 
@@ -2002,8 +2052,9 @@ def get_matched_styles_for_node(
         9. **cssPropertyRules** - *(Optional)* A list of CSS at-property rules matching this node.
         10. **cssPropertyRegistrations** - *(Optional)* A list of CSS property registrations matching this node.
         11. **cssFontPaletteValuesRule** - *(Optional)* A font-palette-values rule matching this node.
-        12. **parentLayoutNodeId** - *(Optional)* Id of the first parent element that does not have display: contents.
-        13. **cssFunctionRules** - *(Optional)* A list of CSS at-function rules referenced by styles of this node.
+        12. **cssAtRules** - *(Optional)* A list of simple @rules matching this node or its pseudo-elements.
+        13. **parentLayoutNodeId** - *(Optional)* Id of the first parent element that does not have display: contents.
+        14. **cssFunctionRules** - *(Optional)* A list of CSS at-function rules referenced by styles of this node.
     '''
     params: T_JSON_DICT = dict()
     params['nodeId'] = node_id.to_json()
@@ -2025,6 +2076,7 @@ def get_matched_styles_for_node(
         [CSSPropertyRule.from_json(i) for i in json['cssPropertyRules']] if json.get('cssPropertyRules', None) is not None else None,
         [CSSPropertyRegistration.from_json(i) for i in json['cssPropertyRegistrations']] if json.get('cssPropertyRegistrations', None) is not None else None,
         CSSFontPaletteValuesRule.from_json(json['cssFontPaletteValuesRule']) if json.get('cssFontPaletteValuesRule', None) is not None else None,
+        [CSSAtRule.from_json(i) for i in json['cssAtRules']] if json.get('cssAtRules', None) is not None else None,
         dom.NodeId.from_json(json['parentLayoutNodeId']) if json.get('parentLayoutNodeId', None) is not None else None,
         [CSSFunctionRule.from_json(i) for i in json['cssFunctionRules']] if json.get('cssFunctionRules', None) is not None else None
     )

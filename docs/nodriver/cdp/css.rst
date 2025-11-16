@@ -214,6 +214,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: CSSAtRule
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: CSSPropertyRule
       :members:
       :undoc-members:
