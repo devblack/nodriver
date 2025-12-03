@@ -2174,6 +2174,13 @@ class DirectUDPSocketOptions:
     #: Expected to be unsigned integer.
     receive_buffer_size: typing.Optional[float] = None
 
+    multicast_loopback: typing.Optional[bool] = None
+
+    #: Unsigned int 8.
+    multicast_time_to_live: typing.Optional[int] = None
+
+    multicast_allow_address_sharing: typing.Optional[bool] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         if self.remote_addr is not None:
@@ -2190,6 +2197,12 @@ class DirectUDPSocketOptions:
             json['sendBufferSize'] = self.send_buffer_size
         if self.receive_buffer_size is not None:
             json['receiveBufferSize'] = self.receive_buffer_size
+        if self.multicast_loopback is not None:
+            json['multicastLoopback'] = self.multicast_loopback
+        if self.multicast_time_to_live is not None:
+            json['multicastTimeToLive'] = self.multicast_time_to_live
+        if self.multicast_allow_address_sharing is not None:
+            json['multicastAllowAddressSharing'] = self.multicast_allow_address_sharing
         return json
 
     @classmethod
@@ -2202,6 +2215,9 @@ class DirectUDPSocketOptions:
             dns_query_type=DirectSocketDnsQueryType.from_json(json['dnsQueryType']) if json.get('dnsQueryType', None) is not None else None,
             send_buffer_size=float(json['sendBufferSize']) if json.get('sendBufferSize', None) is not None else None,
             receive_buffer_size=float(json['receiveBufferSize']) if json.get('receiveBufferSize', None) is not None else None,
+            multicast_loopback=bool(json['multicastLoopback']) if json.get('multicastLoopback', None) is not None else None,
+            multicast_time_to_live=int(json['multicastTimeToLive']) if json.get('multicastTimeToLive', None) is not None else None,
+            multicast_allow_address_sharing=bool(json['multicastAllowAddressSharing']) if json.get('multicastAllowAddressSharing', None) is not None else None,
         )
 
 
@@ -4204,6 +4220,44 @@ class DirectTCPSocketChunkReceived:
             identifier=RequestId.from_json(json['identifier']),
             data=str(json['data']),
             timestamp=MonotonicTime.from_json(json['timestamp'])
+        )
+
+
+@event_class('Network.directUDPSocketJoinedMulticastGroup')
+@dataclass
+class DirectUDPSocketJoinedMulticastGroup:
+    '''
+    **EXPERIMENTAL**
+
+
+    '''
+    identifier: RequestId
+    ip_address: str
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectUDPSocketJoinedMulticastGroup:
+        return cls(
+            identifier=RequestId.from_json(json['identifier']),
+            ip_address=str(json['IPAddress'])
+        )
+
+
+@event_class('Network.directUDPSocketLeftMulticastGroup')
+@dataclass
+class DirectUDPSocketLeftMulticastGroup:
+    '''
+    **EXPERIMENTAL**
+
+
+    '''
+    identifier: RequestId
+    ip_address: str
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> DirectUDPSocketLeftMulticastGroup:
+        return cls(
+            identifier=RequestId.from_json(json['identifier']),
+            ip_address=str(json['IPAddress'])
         )
 
 

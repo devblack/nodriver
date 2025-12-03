@@ -365,6 +365,8 @@ to. For more information, see
 
 .. autofunction:: get_ad_script_ancestry
 
+.. autofunction:: get_annotated_page_content
+
 .. autofunction:: get_app_id
 
 .. autofunction:: get_app_manifest

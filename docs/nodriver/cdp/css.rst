@@ -24,11 +24,6 @@ yourself. Instead, the API creates objects for you as return
 values from commands, and then you can use those objects as
 arguments to other commands.
 
-.. autoclass:: StyleSheetId
-      :members:
-      :undoc-members:
-      :exclude-members: from_json, to_json
-
 .. autoclass:: StyleSheetOrigin
       :members:
       :undoc-members:
@@ -205,11 +200,6 @@ arguments to other commands.
       :exclude-members: from_json, to_json
 
 .. autoclass:: CSSPropertyRegistration
-      :members:
-      :undoc-members:
-      :exclude-members: from_json, to_json
-
-.. autoclass:: CSSFontPaletteValuesRule
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json

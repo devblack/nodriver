@@ -621,6 +621,16 @@ you use the event's attributes.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: DirectUDPSocketJoinedMulticastGroup
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: DirectUDPSocketLeftMulticastGroup
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: DirectUDPSocketCreated
       :members:
       :undoc-members:

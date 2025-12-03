@@ -632,6 +632,28 @@ def set_remote_locations(
     json = yield cmd_dict
 
 
+def get_dev_tools_target(
+        target_id: TargetID
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Optional[TargetID]]:
+    '''
+    Gets the targetId of the DevTools page target opened for the given target
+    (if any).
+
+    **EXPERIMENTAL**
+
+    :param target_id: Page or tab target ID.
+    :returns: *(Optional)* The targetId of DevTools page target if exists.
+    '''
+    params: T_JSON_DICT = dict()
+    params['targetId'] = target_id.to_json()
+    cmd_dict: T_JSON_DICT = {
+        'method': 'Target.getDevToolsTarget',
+        'params': params,
+    }
+    json = yield cmd_dict
+    return TargetID.from_json(json['targetId']) if json.get('targetId', None) is not None else None
+
+
 def open_dev_tools(
         target_id: TargetID,
         panel_id: typing.Optional[str] = None

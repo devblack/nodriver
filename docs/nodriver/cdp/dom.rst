@@ -33,6 +33,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: StyleSheetId
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: BackendNode
       :members:
       :undoc-members:
@@ -234,6 +239,11 @@ yourself. Instead, the API creates events for you and then
 you use the event's attributes.
 
 .. autoclass:: AttributeModified
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: AdoptedStyleSheetsModified
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json
