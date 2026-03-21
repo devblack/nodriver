@@ -445,6 +445,10 @@ class CSSRule:
     #: The array enumerates @starting-style at-rules starting with the innermost one, going outwards.
     starting_styles: typing.Optional[typing.List[CSSStartingStyle]] = None
 
+    #: @navigation CSS at-rule array.
+    #: The array enumerates @navigation at-rules starting with the innermost one, going outwards.
+    navigations: typing.Optional[typing.List[CSSNavigation]] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['selectorList'] = self.selector_list.to_json()
@@ -470,6 +474,8 @@ class CSSRule:
             json['ruleTypes'] = [i.to_json() for i in self.rule_types]
         if self.starting_styles is not None:
             json['startingStyles'] = [i.to_json() for i in self.starting_styles]
+        if self.navigations is not None:
+            json['navigations'] = [i.to_json() for i in self.navigations]
         return json
 
     @classmethod
@@ -488,6 +494,7 @@ class CSSRule:
             scopes=[CSSScope.from_json(i) for i in json['scopes']] if json.get('scopes', None) is not None else None,
             rule_types=[CSSRuleType.from_json(i) for i in json['ruleTypes']] if json.get('ruleTypes', None) is not None else None,
             starting_styles=[CSSStartingStyle.from_json(i) for i in json['startingStyles']] if json.get('startingStyles', None) is not None else None,
+            navigations=[CSSNavigation.from_json(i) for i in json['navigations']] if json.get('navigations', None) is not None else None,
         )
 
 
@@ -503,6 +510,7 @@ class CSSRuleType(enum.Enum):
     SCOPE_RULE = "ScopeRule"
     STYLE_RULE = "StyleRule"
     STARTING_STYLE_RULE = "StartingStyleRule"
+    NAVIGATION_RULE = "NavigationRule"
 
     def to_json(self) -> str:
         return self.value
@@ -980,6 +988,45 @@ class CSSSupports:
         return cls(
             text=str(json['text']),
             active=bool(json['active']),
+            range_=SourceRange.from_json(json['range']) if json.get('range', None) is not None else None,
+            style_sheet_id=dom.StyleSheetId.from_json(json['styleSheetId']) if json.get('styleSheetId', None) is not None else None,
+        )
+
+
+@dataclass
+class CSSNavigation:
+    '''
+    CSS Navigation at-rule descriptor.
+    '''
+    #: Navigation rule text.
+    text: str
+
+    #: Whether the navigation condition is satisfied.
+    active: typing.Optional[bool] = None
+
+    #: The associated rule header range in the enclosing stylesheet (if
+    #: available).
+    range_: typing.Optional[SourceRange] = None
+
+    #: Identifier of the stylesheet containing this object (if exists).
+    style_sheet_id: typing.Optional[dom.StyleSheetId] = None
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['text'] = self.text
+        if self.active is not None:
+            json['active'] = self.active
+        if self.range_ is not None:
+            json['range'] = self.range_.to_json()
+        if self.style_sheet_id is not None:
+            json['styleSheetId'] = self.style_sheet_id.to_json()
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> CSSNavigation:
+        return cls(
+            text=str(json['text']),
+            active=bool(json['active']) if json.get('active', None) is not None else None,
             range_=SourceRange.from_json(json['range']) if json.get('range', None) is not None else None,
             style_sheet_id=dom.StyleSheetId.from_json(json['styleSheetId']) if json.get('styleSheetId', None) is not None else None,
         )
@@ -1515,6 +1562,9 @@ class CSSFunctionConditionNode:
     #: @supports CSS at-rule condition. Only one type of condition should be set.
     supports: typing.Optional[CSSSupports] = None
 
+    #: @navigation condition. Only one type of condition should be set.
+    navigation: typing.Optional[CSSNavigation] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['children'] = [i.to_json() for i in self.children]
@@ -1525,6 +1575,8 @@ class CSSFunctionConditionNode:
             json['containerQueries'] = self.container_queries.to_json()
         if self.supports is not None:
             json['supports'] = self.supports.to_json()
+        if self.navigation is not None:
+            json['navigation'] = self.navigation.to_json()
         return json
 
     @classmethod
@@ -1535,6 +1587,7 @@ class CSSFunctionConditionNode:
             media=CSSMedia.from_json(json['media']) if json.get('media', None) is not None else None,
             container_queries=CSSContainerQuery.from_json(json['containerQueries']) if json.get('containerQueries', None) is not None else None,
             supports=CSSSupports.from_json(json['supports']) if json.get('supports', None) is not None else None,
+            navigation=CSSNavigation.from_json(json['navigation']) if json.get('navigation', None) is not None else None,
         )
 
 
@@ -1586,6 +1639,9 @@ class CSSFunctionRule:
     #: stylesheet rules) this rule came from.
     style_sheet_id: typing.Optional[dom.StyleSheetId] = None
 
+    #: The BackendNodeId of the DOM node that constitutes the origin tree scope of this rule.
+    origin_tree_scope_node_id: typing.Optional[dom.BackendNodeId] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['name'] = self.name.to_json()
@@ -1594,6 +1650,8 @@ class CSSFunctionRule:
         json['children'] = [i.to_json() for i in self.children]
         if self.style_sheet_id is not None:
             json['styleSheetId'] = self.style_sheet_id.to_json()
+        if self.origin_tree_scope_node_id is not None:
+            json['originTreeScopeNodeId'] = self.origin_tree_scope_node_id.to_json()
         return json
 
     @classmethod
@@ -1604,6 +1662,7 @@ class CSSFunctionRule:
             parameters=[CSSFunctionParameter.from_json(i) for i in json['parameters']],
             children=[CSSFunctionNode.from_json(i) for i in json['children']],
             style_sheet_id=dom.StyleSheetId.from_json(json['styleSheetId']) if json.get('styleSheetId', None) is not None else None,
+            origin_tree_scope_node_id=dom.BackendNodeId.from_json(json['originTreeScopeNodeId']) if json.get('originTreeScopeNodeId', None) is not None else None,
         )
 
 
@@ -1875,6 +1934,8 @@ def resolve_values(
     to the provided property syntax, the value is parsed using combined
     syntax as if null ``propertyName`` was provided. If the value cannot be
     resolved even then, return the provided value without any changes.
+    Note: this function currently does not resolve CSS random() function,
+    it returns unmodified random() function parts.`
 
     **EXPERIMENTAL**
 
@@ -2362,6 +2423,33 @@ def set_supports_text(
     }
     json = yield cmd_dict
     return CSSSupports.from_json(json['supports'])
+
+
+def set_navigation_text(
+        style_sheet_id: dom.StyleSheetId,
+        range_: SourceRange,
+        text: str
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,CSSNavigation]:
+    '''
+    Modifies the expression of a navigation at-rule.
+
+    **EXPERIMENTAL**
+
+    :param style_sheet_id:
+    :param range_:
+    :param text:
+    :returns: The resulting CSS Navigation rule after modification.
+    '''
+    params: T_JSON_DICT = dict()
+    params['styleSheetId'] = style_sheet_id.to_json()
+    params['range'] = range_.to_json()
+    params['text'] = text
+    cmd_dict: T_JSON_DICT = {
+        'method': 'CSS.setNavigationText',
+        'params': params,
+    }
+    json = yield cmd_dict
+    return CSSNavigation.from_json(json['navigation'])
 
 
 def set_scope_text(

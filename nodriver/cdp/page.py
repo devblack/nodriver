@@ -88,66 +88,6 @@ class AdFrameStatus:
         )
 
 
-@dataclass
-class AdScriptId:
-    '''
-    Identifies the script which caused a script or frame to be labelled as an
-    ad.
-    '''
-    #: Script Id of the script which caused a script or frame to be labelled as
-    #: an ad.
-    script_id: runtime.ScriptId
-
-    #: Id of scriptId's debugger.
-    debugger_id: runtime.UniqueDebuggerId
-
-    def to_json(self) -> T_JSON_DICT:
-        json: T_JSON_DICT = dict()
-        json['scriptId'] = self.script_id.to_json()
-        json['debuggerId'] = self.debugger_id.to_json()
-        return json
-
-    @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> AdScriptId:
-        return cls(
-            script_id=runtime.ScriptId.from_json(json['scriptId']),
-            debugger_id=runtime.UniqueDebuggerId.from_json(json['debuggerId']),
-        )
-
-
-@dataclass
-class AdScriptAncestry:
-    '''
-    Encapsulates the script ancestry and the root script filterlist rule that
-    caused the frame to be labelled as an ad. Only created when ``ancestryChain``
-    is not empty.
-    '''
-    #: A chain of ``AdScriptId``'s representing the ancestry of an ad script that
-    #: led to the creation of a frame. The chain is ordered from the script
-    #: itself (lower level) up to its root ancestor that was flagged by
-    #: filterlist.
-    ancestry_chain: typing.List[AdScriptId]
-
-    #: The filterlist rule that caused the root (last) script in
-    #: ``ancestryChain`` to be ad-tagged. Only populated if the rule is
-    #: available.
-    root_script_filterlist_rule: typing.Optional[str] = None
-
-    def to_json(self) -> T_JSON_DICT:
-        json: T_JSON_DICT = dict()
-        json['ancestryChain'] = [i.to_json() for i in self.ancestry_chain]
-        if self.root_script_filterlist_rule is not None:
-            json['rootScriptFilterlistRule'] = self.root_script_filterlist_rule
-        return json
-
-    @classmethod
-    def from_json(cls, json: T_JSON_DICT) -> AdScriptAncestry:
-        return cls(
-            ancestry_chain=[AdScriptId.from_json(i) for i in json['ancestryChain']],
-            root_script_filterlist_rule=str(json['rootScriptFilterlistRule']) if json.get('rootScriptFilterlistRule', None) is not None else None,
-        )
-
-
 class SecureContextType(enum.Enum):
     '''
     Indicates whether the frame is a secure context and why it is the case.
@@ -270,7 +210,9 @@ class PermissionsPolicyFeature(enum.Enum):
     LANGUAGE_DETECTOR = "language-detector"
     LANGUAGE_MODEL = "language-model"
     LOCAL_FONTS = "local-fonts"
+    LOCAL_NETWORK = "local-network"
     LOCAL_NETWORK_ACCESS = "local-network-access"
+    LOOPBACK_NETWORK = "loopback-network"
     MAGNETOMETER = "magnetometer"
     MANUAL_TEXT = "manual-text"
     MEDIA_PLAYBACK_WHILE_NOT_VISIBLE = "media-playback-while-not-visible"
@@ -1782,6 +1724,7 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     BACK_FORWARD_CACHE_DISABLED_FOR_PRERENDER = "BackForwardCacheDisabledForPrerender"
     USER_AGENT_OVERRIDE_DIFFERS = "UserAgentOverrideDiffers"
     FOREGROUND_CACHE_LIMIT = "ForegroundCacheLimit"
+    FORWARD_CACHE_DISABLED = "ForwardCacheDisabled"
     BROWSING_INSTANCE_NOT_SWAPPED = "BrowsingInstanceNotSwapped"
     BACK_FORWARD_CACHE_DISABLED_FOR_DELEGATE = "BackForwardCacheDisabledForDelegate"
     UNLOAD_HANDLER_EXISTS_IN_MAIN_FRAME = "UnloadHandlerExistsInMainFrame"
@@ -1825,6 +1768,7 @@ class BackForwardCacheNotRestoredReason(enum.Enum):
     SHARED_WORKER_MESSAGE = "SharedWorkerMessage"
     SHARED_WORKER_WITH_NO_ACTIVE_CLIENT = "SharedWorkerWithNoActiveClient"
     WEB_LOCKS = "WebLocks"
+    WEB_LOCKS_CONTENTION = "WebLocksContention"
     WEB_HID = "WebHID"
     WEB_BLUETOOTH = "WebBluetooth"
     WEB_SHARE = "WebShare"
@@ -2352,7 +2296,7 @@ def get_app_id() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Tuple[typing
 
 def get_ad_script_ancestry(
         frame_id: FrameId
-    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Optional[AdScriptAncestry]]:
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Optional[network.AdAncestry]]:
     '''
 
 
@@ -2368,7 +2312,7 @@ def get_ad_script_ancestry(
         'params': params,
     }
     json = yield cmd_dict
-    return AdScriptAncestry.from_json(json['adScriptAncestry']) if json.get('adScriptAncestry', None) is not None else None
+    return network.AdAncestry.from_json(json['adScriptAncestry']) if json.get('adScriptAncestry', None) is not None else None
 
 
 def get_frame_tree() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,FrameTree]:

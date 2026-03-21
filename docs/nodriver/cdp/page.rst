@@ -37,16 +37,6 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
-.. autoclass:: AdScriptId
-      :members:
-      :undoc-members:
-      :exclude-members: from_json, to_json
-
-.. autoclass:: AdScriptAncestry
-      :members:
-      :undoc-members:
-      :exclude-members: from_json, to_json
-
 .. autoclass:: SecureContextType
       :members:
       :undoc-members:

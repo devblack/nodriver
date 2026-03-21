@@ -11,6 +11,7 @@ import typing
 from dataclasses import dataclass
 from .util import event_class, T_JSON_DICT
 
+from . import network
 from . import page
 from . import runtime
 from deprecated.sphinx import deprecated # type: ignore
@@ -100,6 +101,7 @@ class PseudoType(enum.Enum):
     CHECKMARK = "checkmark"
     BEFORE = "before"
     AFTER = "after"
+    EXPAND_ICON = "expand-icon"
     PICKER_ICON = "picker-icon"
     INTEREST_HINT = "interest-hint"
     MARKER = "marker"
@@ -135,7 +137,6 @@ class PseudoType(enum.Enum):
     PICKER = "picker"
     PERMISSION_ICON = "permission-icon"
     OVERSCROLL_AREA_PARENT = "overscroll-area-parent"
-    OVERSCROLL_CLIENT_AREA = "overscroll-client-area"
 
     def to_json(self) -> str:
         return self.value
@@ -332,6 +333,8 @@ class Node:
 
     adopted_style_sheets: typing.Optional[typing.List[StyleSheetId]] = None
 
+    ad_provenance: typing.Optional[network.AdProvenance] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['nodeId'] = self.node_id.to_json()
@@ -396,6 +399,8 @@ class Node:
             json['affectedByStartingStyles'] = self.affected_by_starting_styles
         if self.adopted_style_sheets is not None:
             json['adoptedStyleSheets'] = [i.to_json() for i in self.adopted_style_sheets]
+        if self.ad_provenance is not None:
+            json['adProvenance'] = self.ad_provenance.to_json()
         return json
 
     @classmethod
@@ -435,6 +440,7 @@ class Node:
             is_scrollable=bool(json['isScrollable']) if json.get('isScrollable', None) is not None else None,
             affected_by_starting_styles=bool(json['affectedByStartingStyles']) if json.get('affectedByStartingStyles', None) is not None else None,
             adopted_style_sheets=[StyleSheetId.from_json(i) for i in json['adoptedStyleSheets']] if json.get('adoptedStyleSheets', None) is not None else None,
+            ad_provenance=network.AdProvenance.from_json(json['adProvenance']) if json.get('adProvenance', None) is not None else None,
         )
 
 
@@ -2123,6 +2129,27 @@ class ScrollableFlagUpdated:
         return cls(
             node_id=NodeId.from_json(json['nodeId']),
             is_scrollable=bool(json['isScrollable'])
+        )
+
+
+@event_class('DOM.adRelatedStateUpdated')
+@dataclass
+class AdRelatedStateUpdated:
+    '''
+    **EXPERIMENTAL**
+
+    Fired when a node's ad related state changes.
+    '''
+    #: The id of the node.
+    node_id: NodeId
+    #: The provenance of the ad related node, if it is ad related.
+    ad_provenance: typing.Optional[network.AdProvenance]
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> AdRelatedStateUpdated:
+        return cls(
+            node_id=NodeId.from_json(json['nodeId']),
+            ad_provenance=network.AdProvenance.from_json(json['adProvenance']) if json.get('adProvenance', None) is not None else None
         )
 
 

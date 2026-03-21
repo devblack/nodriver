@@ -149,6 +149,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: CSSNavigation
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: CSSScope
       :members:
       :undoc-members:
@@ -305,6 +310,8 @@ to. For more information, see
 .. autofunction:: set_local_fonts_enabled
 
 .. autofunction:: set_media_text
+
+.. autofunction:: set_navigation_text
 
 .. autofunction:: set_property_rule_property_name
 

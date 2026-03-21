@@ -337,17 +337,23 @@ def create_browser_context(
     return browser.BrowserContextID.from_json(json['browserContextId'])
 
 
-def get_browser_contexts() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.List[browser.BrowserContextID]]:
+def get_browser_contexts() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Tuple[typing.List[browser.BrowserContextID], typing.Optional[browser.BrowserContextID]]]:
     '''
     Returns all browser contexts created with ``Target.createBrowserContext`` method.
 
-    :returns: An array of browser context ids.
+    :returns: A tuple with the following items:
+
+        0. **browserContextIds** - An array of browser context ids.
+        1. **defaultBrowserContextId** - *(Optional)* The id of the default browser context if available.
     '''
     cmd_dict: T_JSON_DICT = {
         'method': 'Target.getBrowserContexts',
     }
     json = yield cmd_dict
-    return [browser.BrowserContextID.from_json(i) for i in json['browserContextIds']]
+    return (
+        [browser.BrowserContextID.from_json(i) for i in json['browserContextIds']],
+        browser.BrowserContextID.from_json(json['defaultBrowserContextId']) if json.get('defaultBrowserContextId', None) is not None else None
+    )
 
 
 def create_target(
@@ -362,7 +368,8 @@ def create_target(
         new_window: typing.Optional[bool] = None,
         background: typing.Optional[bool] = None,
         for_tab: typing.Optional[bool] = None,
-        hidden: typing.Optional[bool] = None
+        hidden: typing.Optional[bool] = None,
+        focus: typing.Optional[bool] = None
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,TargetID]:
     '''
     Creates a new page.
@@ -379,6 +386,7 @@ def create_target(
     :param background: *(Optional)* Whether to create the target in background or foreground (false by default, not supported by headless shell).
     :param for_tab: **(EXPERIMENTAL)** *(Optional)* Whether to create the target of type "tab".
     :param hidden: **(EXPERIMENTAL)** *(Optional)* Whether to create a hidden target. The hidden target is observable via protocol, but not present in the tab UI strip. Cannot be created with ```forTab: true````, ````newWindow: true```` or ````background: false```. The life-time of the tab is limited to the life-time of the session.
+    :param focus: **(EXPERIMENTAL)** *(Optional)* If specified, the option is used to determine if the new target should be focused or not. By default, the focus behavior depends on the value of the background field. For example, background=false and focus=false will result in the target tab being opened but the browser window remain unchanged (if it was in the background, it will remain in the background) and background=false with focus=undefined will result in the window being focused. Using background: true and focus: true is not supported and will result in an error.
     :returns: The id of the page opened.
     '''
     params: T_JSON_DICT = dict()
@@ -405,6 +413,8 @@ def create_target(
         params['forTab'] = for_tab
     if hidden is not None:
         params['hidden'] = hidden
+    if focus is not None:
+        params['focus'] = focus
     cmd_dict: T_JSON_DICT = {
         'method': 'Target.createTarget',
         'params': params,
