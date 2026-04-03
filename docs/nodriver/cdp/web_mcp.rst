@@ -22,6 +22,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: InvocationStatus
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: Tool
       :members:
       :undoc-members:
@@ -39,6 +44,8 @@ commands, and ``z`` is the return type you should pay attention
 to. For more information, see
 :ref:`Getting Started: Commands <getting-started-commands>`.
 
+.. autofunction:: disable
+
 .. autofunction:: enable
 
 Events
@@ -54,6 +61,16 @@ you use the event's attributes.
       :exclude-members: from_json, to_json
 
 .. autoclass:: ToolsRemoved
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: ToolInvoked
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
+.. autoclass:: ToolResponded
       :members:
       :undoc-members:
       :exclude-members: from_json, to_json

@@ -43,6 +43,22 @@ class Annotation:
         )
 
 
+class InvocationStatus(enum.Enum):
+    '''
+    Represents the status of a tool invocation.
+    '''
+    SUCCESS = "Success"
+    CANCELED = "Canceled"
+    ERROR = "Error"
+
+    def to_json(self) -> str:
+        return self.value
+
+    @classmethod
+    def from_json(cls, json: str) -> InvocationStatus:
+        return cls(json)
+
+
 @dataclass
 class Tool:
     '''
@@ -108,6 +124,16 @@ def enable() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
     json = yield cmd_dict
 
 
+def disable() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Disables the WebMCP domain.
+    '''
+    cmd_dict: T_JSON_DICT = {
+        'method': 'WebMCP.disable',
+    }
+    json = yield cmd_dict
+
+
 @event_class('WebMCP.toolsAdded')
 @dataclass
 class ToolsAdded:
@@ -137,4 +163,57 @@ class ToolsRemoved:
     def from_json(cls, json: T_JSON_DICT) -> ToolsRemoved:
         return cls(
             tools=[Tool.from_json(i) for i in json['tools']]
+        )
+
+
+@event_class('WebMCP.toolInvoked')
+@dataclass
+class ToolInvoked:
+    '''
+    Event fired when a tool invocation starts.
+    '''
+    #: Name of the tool to invoke.
+    tool_name: str
+    #: Frame id
+    frame_id: page.FrameId
+    #: Invocation identifier.
+    invocation_id: str
+    #: The input parameters used for the invocation.
+    input_: str
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ToolInvoked:
+        return cls(
+            tool_name=str(json['toolName']),
+            frame_id=page.FrameId.from_json(json['frameId']),
+            invocation_id=str(json['invocationId']),
+            input_=str(json['input'])
+        )
+
+
+@event_class('WebMCP.toolResponded')
+@dataclass
+class ToolResponded:
+    '''
+    Event fired when a tool invocation completes or fails.
+    '''
+    #: Invocation identifier.
+    invocation_id: str
+    #: Status of the invocation.
+    status: InvocationStatus
+    #: Output or error delivered as delivered to the agent. Missing if ``status`` is anything other than Success.
+    output: typing.Optional[typing.Any]
+    #: Error text for protocol users.
+    error_text: typing.Optional[str]
+    #: The exception object, if the javascript tool threw an error>
+    exception: typing.Optional[runtime.RemoteObject]
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> ToolResponded:
+        return cls(
+            invocation_id=str(json['invocationId']),
+            status=InvocationStatus.from_json(json['status']),
+            output=json['output'] if json.get('output', None) is not None else None,
+            error_text=str(json['errorText']) if json.get('errorText', None) is not None else None,
+            exception=runtime.RemoteObject.from_json(json['exception']) if json.get('exception', None) is not None else None
         )
