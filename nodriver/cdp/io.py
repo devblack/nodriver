@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from .util import event_class, T_JSON_DICT
 
 from . import runtime
+from deprecated.sphinx import deprecated # type: ignore
 
 
 class StreamHandle(str):
@@ -82,11 +83,14 @@ def read(
     )
 
 
+@deprecated(version="1.3")
 def resolve_blob(
         object_id: runtime.RemoteObjectId
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,str]:
     '''
     Return UUID of Blob object specified by a remote object id.
+
+    .. deprecated:: 1.3
 
     :param object_id: Object id of a Blob object wrapper.
     :returns: UUID of the specified Blob.

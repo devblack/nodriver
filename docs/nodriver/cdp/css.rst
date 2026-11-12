@@ -64,6 +64,11 @@ arguments to other commands.
       :undoc-members:
       :exclude-members: from_json, to_json
 
+.. autoclass:: SpecificityComponent
+      :members:
+      :undoc-members:
+      :exclude-members: from_json, to_json
+
 .. autoclass:: Specificity
       :members:
       :undoc-members:
@@ -271,6 +276,8 @@ to. For more information, see
 
 .. autofunction:: enable
 
+.. autofunction:: force_position_try_option
+
 .. autofunction:: force_pseudo_state
 
 .. autofunction:: force_starting_style
@@ -300,6 +307,8 @@ to. For more information, see
 .. autofunction:: get_style_sheet_text
 
 .. autofunction:: resolve_values
+
+.. autofunction:: set_container_query_condition_text
 
 .. autofunction:: set_container_query_text
 

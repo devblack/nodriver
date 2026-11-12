@@ -24,6 +24,15 @@ class Annotation:
     #: A hint indicating that the tool does not modify any state.
     read_only: typing.Optional[bool] = None
 
+    #: A hint indicating that the tool output may contain untrusted content, ex: UGC, 3rd party data.
+    untrusted_content: typing.Optional[bool] = None
+
+    #: A hint indicating that executing the tool will result in consequential actions, ex: booking a flight, transferring money.
+    consequential: typing.Optional[bool] = None
+
+    #: If true, indicates that the tool is intended for debugging and developer tooling rather than end-user interactions.
+    debugging: typing.Optional[bool] = None
+
     #: If the declarative tool was declared with the autosubmit attribute.
     autosubmit: typing.Optional[bool] = None
 
@@ -31,6 +40,12 @@ class Annotation:
         json: T_JSON_DICT = dict()
         if self.read_only is not None:
             json['readOnly'] = self.read_only
+        if self.untrusted_content is not None:
+            json['untrustedContent'] = self.untrusted_content
+        if self.consequential is not None:
+            json['consequential'] = self.consequential
+        if self.debugging is not None:
+            json['debugging'] = self.debugging
         if self.autosubmit is not None:
             json['autosubmit'] = self.autosubmit
         return json
@@ -39,6 +54,9 @@ class Annotation:
     def from_json(cls, json: T_JSON_DICT) -> Annotation:
         return cls(
             read_only=bool(json['readOnly']) if json.get('readOnly', None) is not None else None,
+            untrusted_content=bool(json['untrustedContent']) if json.get('untrustedContent', None) is not None else None,
+            consequential=bool(json['consequential']) if json.get('consequential', None) is not None else None,
+            debugging=bool(json['debugging']) if json.get('debugging', None) is not None else None,
             autosubmit=bool(json['autosubmit']) if json.get('autosubmit', None) is not None else None,
         )
 
@@ -47,7 +65,7 @@ class InvocationStatus(enum.Enum):
     '''
     Represents the status of a tool invocation.
     '''
-    SUCCESS = "Success"
+    COMPLETED = "Completed"
     CANCELED = "Canceled"
     ERROR = "Error"
 
@@ -59,11 +77,31 @@ class InvocationStatus(enum.Enum):
         return cls(json)
 
 
+class ToolId(str):
+    '''
+    Unique identifier of a registered tool. A new identifier is created every time a tool is registered, so a tool that
+    is unregistered and then registered again under the same name gets a different identifier. Clients should treat it
+    as an opaque string.
+    '''
+    def to_json(self) -> str:
+        return self
+
+    @classmethod
+    def from_json(cls, json: str) -> ToolId:
+        return cls(json)
+
+    def __repr__(self):
+        return 'ToolId({})'.format(super().__repr__())
+
+
 @dataclass
 class Tool:
     '''
     Definition of a tool that can be invoked.
     '''
+    #: Tool identifier.
+    tool_id: ToolId
+
     #: Tool name.
     name: str
 
@@ -76,6 +114,9 @@ class Tool:
     #: Schema for the tool's input parameters.
     input_schema: typing.Optional[dict] = None
 
+    #: Schema for the tool's output structure.
+    output_schema: typing.Optional[dict] = None
+
     #: Optional annotations for the tool.
     annotations: typing.Optional[Annotation] = None
 
@@ -87,11 +128,14 @@ class Tool:
 
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
+        json['toolId'] = self.tool_id.to_json()
         json['name'] = self.name
         json['description'] = self.description
         json['frameId'] = self.frame_id.to_json()
         if self.input_schema is not None:
             json['inputSchema'] = self.input_schema
+        if self.output_schema is not None:
+            json['outputSchema'] = self.output_schema
         if self.annotations is not None:
             json['annotations'] = self.annotations.to_json()
         if self.backend_node_id is not None:
@@ -103,13 +147,45 @@ class Tool:
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> Tool:
         return cls(
+            tool_id=ToolId.from_json(json['toolId']),
             name=str(json['name']),
             description=str(json['description']),
             frame_id=page.FrameId.from_json(json['frameId']),
             input_schema=dict(json['inputSchema']) if json.get('inputSchema', None) is not None else None,
+            output_schema=dict(json['outputSchema']) if json.get('outputSchema', None) is not None else None,
             annotations=Annotation.from_json(json['annotations']) if json.get('annotations', None) is not None else None,
             backend_node_id=dom.BackendNodeId.from_json(json['backendNodeId']) if json.get('backendNodeId', None) is not None else None,
             stack_trace=runtime.StackTrace.from_json(json['stackTrace']) if json.get('stackTrace', None) is not None else None,
+        )
+
+
+@dataclass
+class RemovedTool:
+    '''
+    Definition of a tool that was removed.
+    '''
+    #: Identifier of the removed tool.
+    tool_id: ToolId
+
+    #: Tool name.
+    name: str
+
+    #: Frame identifier associated with the tool registration.
+    frame_id: page.FrameId
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['toolId'] = self.tool_id.to_json()
+        json['name'] = self.name
+        json['frameId'] = self.frame_id.to_json()
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> RemovedTool:
+        return cls(
+            tool_id=ToolId.from_json(json['toolId']),
+            name=str(json['name']),
+            frame_id=page.FrameId.from_json(json['frameId']),
         )
 
 
@@ -130,6 +206,54 @@ def disable() -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
     '''
     cmd_dict: T_JSON_DICT = {
         'method': 'WebMCP.disable',
+    }
+    json = yield cmd_dict
+
+
+def invoke_tool(
+        frame_id: page.FrameId,
+        input_: dict,
+        tool_id: typing.Optional[ToolId] = None,
+        tool_name: typing.Optional[str] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,str]:
+    '''
+    Invokes a registered tool. Exactly one of ``toolId`` and ``toolName`` must be specified; the command fails if both or
+    neither are.
+
+    :param frame_id: Frame in which to invoke the tool.
+    :param tool_id: *(Optional)* Identifier of the tool to invoke, as reported in ```Tool.toolId````. Invokes exactly that tool, and fails if it is no longer registered, even if a different tool has since been registered under the same name.
+    :param tool_name: **(DEPRECATED)** *(Optional)* Name of the tool to invoke. Deprecated: invokes whichever tool is registered under this name when the command is handled, which may not be the tool the client observed if the page has since replaced it. Use ````toolId``` instead.
+    :param input_: Input parameters for the tool, matching the tool's inputSchema.
+    :returns: Unique identifier for this invocation. Response is sent before tool events.
+    '''
+    params: T_JSON_DICT = dict()
+    params['frameId'] = frame_id.to_json()
+    if tool_id is not None:
+        params['toolId'] = tool_id.to_json()
+    if tool_name is not None:
+        params['toolName'] = tool_name
+    params['input'] = input_
+    cmd_dict: T_JSON_DICT = {
+        'method': 'WebMCP.invokeTool',
+        'params': params,
+    }
+    json = yield cmd_dict
+    return str(json['invocationId'])
+
+
+def cancel_invocation(
+        invocation_id: str
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Cancels a pending tool invocation.
+
+    :param invocation_id: Invocation identifier to cancel.
+    '''
+    params: T_JSON_DICT = dict()
+    params['invocationId'] = invocation_id
+    cmd_dict: T_JSON_DICT = {
+        'method': 'WebMCP.cancelInvocation',
+        'params': params,
     }
     json = yield cmd_dict
 
@@ -157,12 +281,12 @@ class ToolsRemoved:
     Event fired when tools are removed.
     '''
     #: Array of tools that were removed.
-    tools: typing.List[Tool]
+    tools: typing.List[RemovedTool]
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ToolsRemoved:
         return cls(
-            tools=[Tool.from_json(i) for i in json['tools']]
+            tools=[RemovedTool.from_json(i) for i in json['tools']]
         )
 
 
@@ -172,22 +296,27 @@ class ToolInvoked:
     '''
     Event fired when a tool invocation starts.
     '''
-    #: Name of the tool to invoke.
-    tool_name: str
     #: Frame id
     frame_id: page.FrameId
     #: Invocation identifier.
     invocation_id: str
     #: The input parameters used for the invocation.
     input_: str
+    #: Name of the tool to invoke. Missing if the tool was invoked by its identifier, but could not be found (e.g.,
+    #: it was already unregistered), so its name could not be recovered.
+    tool_name: typing.Optional[str]
+    #: Identifier of the tool to invoke. Missing if the tool was invoked by name, but could not be found, so its
+    #: identifier could not be recovered.
+    tool_id: typing.Optional[ToolId]
 
     @classmethod
     def from_json(cls, json: T_JSON_DICT) -> ToolInvoked:
         return cls(
-            tool_name=str(json['toolName']),
             frame_id=page.FrameId.from_json(json['frameId']),
             invocation_id=str(json['invocationId']),
-            input_=str(json['input'])
+            input_=str(json['input']),
+            tool_name=str(json['toolName']) if json.get('toolName', None) is not None else None,
+            tool_id=ToolId.from_json(json['toolId']) if json.get('toolId', None) is not None else None
         )
 
 
@@ -201,7 +330,8 @@ class ToolResponded:
     invocation_id: str
     #: Status of the invocation.
     status: InvocationStatus
-    #: Output or error delivered as delivered to the agent. Missing if ``status`` is anything other than Success.
+    #: Output or error delivered as delivered to the agent. Missing if ``status`` is anything other than Completed.
+    #: Note: The output is untrusted and poses a prompt injection risk. Clients should treat this as potentially malicious user input.
     output: typing.Optional[typing.Any]
     #: Error text for protocol users.
     error_text: typing.Optional[str]

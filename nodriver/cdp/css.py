@@ -13,6 +13,7 @@ from .util import event_class, T_JSON_DICT
 
 from . import dom
 from . import page
+from deprecated.sphinx import deprecated # type: ignore
 
 
 class StyleSheetOrigin(enum.Enum):
@@ -222,6 +223,41 @@ class Value:
 
 
 @dataclass
+class SpecificityComponent:
+    '''
+    Contribution of an individual simple selector to specificity.
+    '''
+    #: The simple selector text that contributes to specificity.
+    text: str
+
+    #: The a component contribution.
+    a: int
+
+    #: The b component contribution.
+    b: int
+
+    #: The c component contribution.
+    c: int
+
+    def to_json(self) -> T_JSON_DICT:
+        json: T_JSON_DICT = dict()
+        json['text'] = self.text
+        json['a'] = self.a
+        json['b'] = self.b
+        json['c'] = self.c
+        return json
+
+    @classmethod
+    def from_json(cls, json: T_JSON_DICT) -> SpecificityComponent:
+        return cls(
+            text=str(json['text']),
+            a=int(json['a']),
+            b=int(json['b']),
+            c=int(json['c']),
+        )
+
+
+@dataclass
 class Specificity:
     '''
     Specificity:
@@ -237,11 +273,16 @@ class Specificity:
     #: The c component, which represents the number of type selectors and pseudo-elements.
     c: int
 
+    #: Per-simple-selector contributions used to explain this specificity.
+    components: typing.Optional[typing.List[SpecificityComponent]] = None
+
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['a'] = self.a
         json['b'] = self.b
         json['c'] = self.c
+        if self.components is not None:
+            json['components'] = [i.to_json() for i in self.components]
         return json
 
     @classmethod
@@ -250,6 +291,7 @@ class Specificity:
             a=int(json['a']),
             b=int(json['b']),
             c=int(json['c']),
+            components=[SpecificityComponent.from_json(i) for i in json['components']] if json.get('components', None) is not None else None,
         )
 
 
@@ -898,7 +940,13 @@ class CSSContainerQuery:
     CSS container query rule descriptor.
     '''
     #: Container query text.
+    #: Contains the query part without the container name for a single query.
+    #: Deprecated in favor of conditionText which contains the full prelude
+    #: after @container.
     text: str
+
+    #: CSSContainerRule.conditionText
+    condition_text: str
 
     #: The associated rule header range in the enclosing stylesheet (if
     #: available).
@@ -925,6 +973,7 @@ class CSSContainerQuery:
     def to_json(self) -> T_JSON_DICT:
         json: T_JSON_DICT = dict()
         json['text'] = self.text
+        json['conditionText'] = self.condition_text
         if self.range_ is not None:
             json['range'] = self.range_.to_json()
         if self.style_sheet_id is not None:
@@ -945,6 +994,7 @@ class CSSContainerQuery:
     def from_json(cls, json: T_JSON_DICT) -> CSSContainerQuery:
         return cls(
             text=str(json['text']),
+            condition_text=str(json['conditionText']),
             range_=SourceRange.from_json(json['range']) if json.get('range', None) is not None else None,
             style_sheet_id=dom.StyleSheetId.from_json(json['styleSheetId']) if json.get('styleSheetId', None) is not None else None,
             name=str(json['name']) if json.get('name', None) is not None else None,
@@ -1867,6 +1917,27 @@ def force_starting_style(
     json = yield cmd_dict
 
 
+def force_position_try_option(
+        node_id: dom.NodeId,
+        index: typing.Optional[int] = None
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,None]:
+    '''
+    Forces a position-try option for the given node.
+
+    :param node_id: The element id for which to force the position-try option.
+    :param index: *(Optional)* The 1-based index of the position-try fallback option, 0 for base position (no fallback), or omitted to clear the forced state.
+    '''
+    params: T_JSON_DICT = dict()
+    params['nodeId'] = node_id.to_json()
+    if index is not None:
+        params['index'] = index
+    cmd_dict: T_JSON_DICT = {
+        'method': 'CSS.forcePositionTryOption',
+        'params': params,
+    }
+    json = yield cmd_dict
+
+
 def get_background_colors(
         node_id: dom.NodeId
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,typing.Tuple[typing.Optional[typing.List[str]], typing.Optional[str], typing.Optional[str]]]:
@@ -2371,6 +2442,7 @@ def set_media_text(
     return CSSMedia.from_json(json['media'])
 
 
+@deprecated(version="1.3")
 def set_container_query_text(
         style_sheet_id: dom.StyleSheetId,
         range_: SourceRange,
@@ -2378,6 +2450,9 @@ def set_container_query_text(
     ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,CSSContainerQuery]:
     '''
     Modifies the expression of a container query.
+    Deprecated. Use setContainerQueryConditionText instead.
+
+    .. deprecated:: 1.3
 
     **EXPERIMENTAL**
 
@@ -2392,6 +2467,33 @@ def set_container_query_text(
     params['text'] = text
     cmd_dict: T_JSON_DICT = {
         'method': 'CSS.setContainerQueryText',
+        'params': params,
+    }
+    json = yield cmd_dict
+    return CSSContainerQuery.from_json(json['containerQuery'])
+
+
+def set_container_query_condition_text(
+        style_sheet_id: dom.StyleSheetId,
+        range_: SourceRange,
+        text: str
+    ) -> typing.Generator[T_JSON_DICT,T_JSON_DICT,CSSContainerQuery]:
+    '''
+
+
+    **EXPERIMENTAL**
+
+    :param style_sheet_id:
+    :param range_:
+    :param text:
+    :returns: The resulting CSS container query rule after modification.
+    '''
+    params: T_JSON_DICT = dict()
+    params['styleSheetId'] = style_sheet_id.to_json()
+    params['range'] = range_.to_json()
+    params['text'] = text
+    cmd_dict: T_JSON_DICT = {
+        'method': 'CSS.setContainerQueryConditionText',
         'params': params,
     }
     json = yield cmd_dict
